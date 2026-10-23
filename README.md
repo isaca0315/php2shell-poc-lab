@@ -302,6 +302,24 @@ Variante mod_php real (el SAPI donde se documenta el RCE de 618):
 > y la variante mod_php reproduce el **fatal real** en `Unknown on line 0`;
 > no incluye heap grooming. Solo se aceptan objetivos loopback.
 
+### Actividad de sistemas operativos
+
+El acto 1 tiene una actividad guiada para estudiar **memoria, procesos y
+sistemas de archivos** con evidencia real (`/proc`, cgroup v2, `strace`,
+`pidstat`, montajes, inodos y logs):
+
+```bash
+./lab/os-activity/run-activity.sh --start
+```
+
+- Guía: [`lab/os-activity/README.md`](lab/os-activity/README.md)
+- Hoja de trabajo: [`lab/os-activity/worksheet.md`](lab/os-activity/worksheet.md)
+- Soluciones: [`lab/os-activity/instructor-notes.md`](lab/os-activity/instructor-notes.md)
+
+Reproduce el OOM del acto 1 y explica por qué es un fallo de **memoria de
+usuario** (Zend MM) y no un OOM del kernel, cómo FPM repone el worker y qué
+papel juega el `tmpfs` de `/tmp`.
+
 ## 9. Parar y limpiar
 
 ```bash

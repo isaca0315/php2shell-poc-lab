@@ -4,6 +4,7 @@ __pycache__/
 
 # Artefactos del lab / engagement
 lab/reports/
+lab/os-activity/out/
 target/www/uploads/*
 !target/www/uploads/.gitkeep
 os-trace/*.log

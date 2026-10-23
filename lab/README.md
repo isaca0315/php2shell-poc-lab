@@ -66,6 +66,43 @@ lab/reports/<UTC>-evidence.txt         # collect-evidence.sh
 
 ---
 
+## Actividad OS — memoria, procesos y sistemas de archivos
+
+El acto 1 se puede convertir en una actividad de sistemas operativos. En vez
+de quedarse en “el worker cayó”, se instrumentan y correlacionan:
+
+- **memoria:** Zend MM vs cgroup v2 (`memory.current/peak/max/events`),
+  `VmSize`/`VmRSS`, page faults y `mmap` de 2 MiB;
+- **procesos:** máster/worker FPM, `exit code 70`, `exit_group(70)`, respawn,
+  `pids.current/max` y el `502` de nginx;
+- **filesystem:** `/tmp` como `tmpfs` (64 MiB, `noexec`), inodo/modo de
+  `sess_*`, rootfs `ro` y la diferencia entre escribir e interpretar un
+  fichero.
+
+```bash
+# Flujo completo: baseline -> sesión -> strace + OOM -> snapshot final
+./lab/os-activity/run-activity.sh --start
+
+# Sin strace (solo /proc, cgroup, pidstat y logs)
+./lab/os-activity/run-activity.sh --start --no-trace
+
+# Evidencias y resumen
+ls -la lab/os-activity/out/latest/
+```
+
+Material:
+
+- [`os-activity/README.md`](os-activity/README.md) — guía y tareas.
+- [`os-activity/worksheet.md`](os-activity/worksheet.md) — hoja del alumno.
+- [`os-activity/instructor-notes.md`](os-activity/instructor-notes.md) — soluciones.
+- `os-activity/collect-snapshot.sh`, `trace-worker.sh`, `run-activity.sh`.
+
+> La actividad es **solo del acto 1**. No incluye RCE ni heap grooming; el
+> target de entrenamiento solo se usa, si está levantado, para comparar
+> montajes.
+
+---
+
 ## Fase 0 — Reglas de enfrentamiento (ROE)
 
 1. **Autorización por escrito**, aunque sea tu propio lab.
