@@ -1,8 +1,8 @@
-# PHP2Shell Red Team Lab — de OOM a RCE
+# PHP2Shell Red Team Lab — CVE-2026-109618 / CVE-2026-109619
 
 > **Entorno aislado en `127.0.0.1`.** El lab tiene dos actos:
 >
-> 1. **CVE-2026-109618/619:** demostrar el impacto del fallo de
+> 1. **CVE-2026-109618 / CVE-2026-109619:** demostrar el impacto del fallo de
 >    `session.upload_progress` (DoS por caída del worker FPM + escritura de
 >    sesión sin `session_start()`).
 > 2. **RCE:** obtener ejecución de comandos en una **app PHP vulnerable por

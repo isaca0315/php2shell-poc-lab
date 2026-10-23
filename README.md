@@ -39,9 +39,9 @@ Aislamiento aplicado:
 
 ## 2. Iniciarlo
 
-```bash
-cd /home/kali/php2shell-poc-lab
+Desde la raíz del repositorio:
 
+```bash
 # Vulnerable (PHP 8.5.11)
 docker compose up -d
 docker compose ps
@@ -313,6 +313,7 @@ LAB_PORT=18080 docker compose up -d php nginx
 ```
 
 - Guía de comandos: [`lab/os-activity/README.md`](lab/os-activity/README.md)
+- Análisis OS de referencia: [`OS-SYS-ANALYSIS.md`](OS-SYS-ANALYSIS.md)
 
 La actividad se resuelve con **comandos de Linux**, sin scripts auxiliares. El
 estudiante entrega **un solo PDF** con el proceso y cuatro capturas. Lo arma
