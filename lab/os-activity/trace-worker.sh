@@ -2,7 +2,7 @@
 # Traza las syscalls del worker PHP-FPM con strace.
 #
 # No hace falta instalar strace en la VM: el script construye una imagen
-# Debian mínima (lab/os-activity/trace-image) y la ejecuta compartiendo el
+# Debian mínima (lab/os-activity/Dockerfile.trace) y la ejecuta compartiendo el
 # PID namespace del contenedor PHP, con CAP_SYS_PTRACE.
 #
 # Uso:
@@ -92,7 +92,7 @@ LOG="$OUTDIR/$LOGNAME"
 
 if ! docker image inspect "$TRACE_IMAGE" >/dev/null 2>&1; then
   echo "[i] Construyendo imagen de trazado '$TRACE_IMAGE' (solo la primera vez)..."
-  if ! docker build -t "$TRACE_IMAGE" "$ACT_DIR/trace-image"; then
+  if ! docker build -t "$TRACE_IMAGE" -f "$ACT_DIR/Dockerfile.trace" "$ACT_DIR"; then
     echo "[!] No se pudo construir la imagen de trazado." >&2
     echo "    Alternativa sin strace: ./collect-snapshot.sh y pidstat." >&2
     exit 1

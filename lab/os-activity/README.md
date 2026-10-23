@@ -62,14 +62,22 @@ Busca estos cuatro datos:
 
 ## 4. Entregable
 
-Un único PDF:
+Un **PDF hecho por ti**. No hay plantilla ni script de conversión: escribe el
+informe en el editor que prefieras (Word, LibreOffice, Markdown, Google Docs,
+etc.), pega las capturas y expórtalo a PDF.
 
-```text
-lab/os-activity/entrega/informe-php2shell.pdf
-```
+Estructura sugerida:
 
-Debe incluir el proceso completo y estas cuatro capturas, cada una con una
-frase que explique qué demuestra:
+1. Portada con tu nombre, fecha y objetivo.
+2. Entorno y límites del contenedor.
+3. Memoria: antes, después y `memory.events`.
+4. Traza: `mmap`, fatal y `exit_group(70)`.
+5. Procesos: worker que muere, worker nuevo y `502`.
+6. Archivos: `tmpfs`, rootfs de solo lectura y `sess_*`.
+7. Conclusiones y comandos usados.
+
+Incluye estas cuatro capturas, cada una con una frase que explique qué
+demuestra:
 
 | Captura | Qué debe mostrar |
 |---|---|
@@ -78,27 +86,15 @@ frase que explique qué demuestra:
 | 3 | Muerte del worker, nuevo worker y `502` |
 | 4 | `tmpfs`, rootfs de solo lectura y `sess_*` |
 
-No hay hoja de trabajo ni carpeta de evidencias que entregar. El PDF es todo.
+No entregues `out/`, scripts ni capturas sueltas. Solo el PDF.
 
-## 5. Regenerar el PDF
-
-La fuente y el generador están en `lab/os-activity/entrega/`:
-
-```bash
-cd lab/os-activity/entrega
-./generar-pdf.sh
-```
-
-Requiere `pandoc` y `weasyprint`. Si repites el laboratorio, actualiza los
-números en `informe.md` y reemplaza las capturas manteniendo los nombres.
-
-## 6. Limpiar
+## 5. Limpiar
 
 ```bash
 docker compose down -v
 ```
 
-## 7. Preguntas para cerrar
+## 6. Preguntas para cerrar
 
 1. ¿Por qué `memory.current` puede ser mayor que `memory_limit`?
 2. ¿Qué diferencia hay entre `exit_group(70)` y un `SIGKILL`?

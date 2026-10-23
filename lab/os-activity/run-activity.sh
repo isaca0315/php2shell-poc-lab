@@ -210,7 +210,7 @@ echo "== [5/6] Resumen =="
   echo "Ver \`$TIMELINE\` (muestras cada 200 ms)."
   echo
   echo "## Siguiente paso"
-  echo "Usa estas evidencias para completar el PDF de \`lab/os-activity/entrega/\`."
+  echo "Usa estas evidencias para armar tu informe y exportarlo a PDF."
 } >"$OUT/summary.md"
 
 sed -n '1,160p' "$OUT/summary.md"

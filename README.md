@@ -313,10 +313,9 @@ procesos y sistemas de archivos** usando evidencia real (`/proc`, cgroup v2,
 ```
 
 - Guía corta: [`lab/os-activity/README.md`](lab/os-activity/README.md)
-- Entregable único: [`lab/os-activity/entrega/informe-php2shell.pdf`](lab/os-activity/entrega/informe-php2shell.pdf)
 
-El estudiante entrega **un solo PDF** con el proceso y cuatro capturas. No
-hay hoja de trabajo ni carpeta de evidencias que entregar.
+El estudiante entrega **un solo PDF** con el proceso y cuatro capturas. Lo
+arma en el editor que prefiera y lo exporta a PDF: no hay plantilla ni script.
 
 ## 9. Parar y limpiar
 

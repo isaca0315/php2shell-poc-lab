@@ -80,11 +80,11 @@ tres capas y entrega **un solo PDF** con el proceso y cuatro capturas.
 ```
 
 - Guía corta: [`os-activity/README.md`](os-activity/README.md)
-- Entregable: [`os-activity/entrega/informe-php2shell.pdf`](os-activity/entrega/informe-php2shell.pdf)
 - Scripts: `os-activity/collect-snapshot.sh`, `trace-worker.sh`, `run-activity.sh`
 
-> Solo acto 1. No incluye RCE ni heap grooming. No hay hoja de trabajo ni
-> carpeta `out/` que entregar.
+> Solo acto 1. No incluye RCE ni heap grooming. El entregable es un PDF
+> armado por el estudiante, sin plantilla ni script. No hay carpeta `out/`
+> que entregar.
 
 ---
 
