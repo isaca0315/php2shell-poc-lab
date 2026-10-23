@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHP2Shell - Animación del Flujo OOM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(ellipse at bottom, #0a0a0f 0%, #000000 100%);
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-bottom: 2px solid #ef4444;
+            background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.1), transparent);
+        }
+
+        .header h1 {
+            color: #f8fafc;
+            font-size: 28px;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 0 0 20px rgba(239, 68, 68, 0.5);
+            margin-bottom: 8px;
+        }
+
+        .header .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid #475569;
+            color: #e2e8f0;
+            padding: 10px 24px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            border-color: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+        }
+
+        .btn.active {
+            border-color: #22d3ee;
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.6);
+            color: #67e8f9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .diagram-panel {
+            background: linear-gradient(145deg, #0f172a, #020617);
+            border: 1px solid #334155;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .diagram-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #ef4444, transparent);
+        }
+
+        .panel-title {
+            color: #f8fafc;
+            font-size: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .isometric-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            position: relative;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .component {
+            opacity: 0.3;
+            transition: all 0.5s ease;
+        }
+
+        .component.active {
+            opacity: 1;
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+
+        .component.glow-red {
+            filter: drop-shadow(0 0 12px #ef4444);
+        }
+
+        .component.glow-cyan {
+            filter: drop-shadow(0 0 12px #22d3ee);
+        }
+
+        .component.glow-green {
+            filter: drop-shadow(0 0 12px #10b981);
+        }
+
+        .info-panel {
+            background: linear-gradient(145deg, #0f172a, #020617);
+            border: 1px solid #334155;
+            padding: 25px;
+            position: relative;
+        }
+
+        .info-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #22d3ee, transparent);
+        }
+
+        .step-info {
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+            color: white;
+            padding: 4px 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .step-title {
+            color: #f8fafc;
+            font-size: 16px;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .step-description {
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .memory-indicator {
+            background: #020617;
+            border: 1px solid #334155;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 11px;
+        }
+
+        .memory-indicator .label {
+            color: #22d3ee;
+        }
+
+        .memory-indicator .value {
+            color: #10b981;
+        }
+
+        .code-panel {
+            background: linear-gradient(145deg, #0f172a, #020617);
+            border: 1px solid #334155;
+            padding: 25px;
+            position: relative;
+        }
+
+        .code-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #10b981, transparent);
+        }
+
+        .code-block {
+            background: #000000;
+            border: 1px solid #1e293b;
+            padding: 20px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .code-line {
+            padding: 4px 0;
+            font-size: 12px;
+            line-height: 1.8;
+            color: #94a3b8;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .code-line.active {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border-left: 3px solid #ef4444;
+            padding-left: 12px;
+            margin-left: -15px;
+        }
+
+        .code-line .line-number {
+            color: #475569;
+            display: inline-block;
+            width: 30px;
+            text-align: right;
+            margin-right: 15px;
+        }
+
+        .code-line.active .line-number {
+            color: #ef4444;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #64748b;
+            font-size: 11px;
+            border-top: 1px solid #1e293b;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PHP2SHELL LAB</h1>
+            <div class="subtitle">ANIMACIÓN DEL FLUJO: SESSION.UPLOAD_PROGRESS OOM</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="btnPrev">◀ Anterior</button>
+            <button class="btn active" id="btnPlay">▶ Play</button>
+            <button class="btn" id="btnPause">⏸ Pause</button>
+            <button class="btn" id="btnNext">Siguiente ▶</button>
+            <button class="btn" id="btnReset">↺ Reiniciar</button>
+        </div>
+
+        <div class="main-grid">
+            <div class="diagram-panel">
+                <div class="panel-title">Arquitectura del Laboratorio</div>
+                <div class="isometric-diagram">
+                    <svg width="700" height="400" viewBox="0 0 700 400">
+                        <defs>
+                            <filter id="glowRed">
+                                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                            <filter id="glowCyan">
+                                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                            <filter id="glowGreen">
+                                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+
+                        <g class="component" id="comp-client">
+                            <polygon points="50,200 120,160 120,200 50,240" fill="none" stroke="#f87171" stroke-width="2"/>
+                            <polygon points="50,200 120,160 190,200 120,240" fill="rgba(239,68,68,0.15)" stroke="#f87171" stroke-width="2"/>
+                            <text x="120" y="150" fill="#fca5a5" font-size="12" text-anchor="middle" font-family="Consolas">CLIENT</text>
+                            <text x="120" y="165" fill="#94a3b8" font-size="9" text-anchor="middle" font-family="Consolas">HTTP POST</text>
+                        </g>
+
+                        <g class="component" id="comp-nginx">
+                            <polygon points="250,200 320,160 320,200 250,240" fill="none" stroke="#60a5fa" stroke-width="2"/>
+                            <polygon points="250,200 320,160 390,200 320,240" fill="rgba(96,165,250,0.15)" stroke="#60a5fa" stroke-width="2"/>
+                            <text x="320" y="150" fill="#93c5fd" font-size="12" text-anchor="middle" font-family="Consolas">NGINX</text>
+                            <text x="320" y="165" fill="#94a3b8" font-size="9" text-anchor="middle" font-family="Consolas">FastCGI</text>
+                        </g>
+
+                        <g class="component" id="comp-fpm">
+                            <polygon points="450,200 520,160 520,200 450,240" fill="none" stroke="#f87171" stroke-width="2"/>
+                            <polygon points="450,200 520,160 590,200 520,240" fill="rgba(239,68,68,0.15)" stroke="#f87171" stroke-width="2"/>
+                            <text x="520" y="150" fill="#fca5a5" font-size="12" text-anchor="middle" font-family="Consolas">PHP-FPM</text>
+                            <text x="520" y="165" fill="#94a3b8" font-size="9" text-anchor="middle" font-family="Consolas">worker</text>
+                            <text x="520" y="280" fill="#ef4444" font-size="9" text-anchor="middle" font-family="Consolas" opacity="0" id="fpm-exit">exit 70</text>
+                        </g>
+
+                        <g class="component" id="comp-tmpfs">
+                            <polygon points="350,280 420,240 420,280 350,320" fill="none" stroke="#34d399" stroke-width="2"/>
+                            <polygon points="350,280 420,240 490,280 420,320" fill="rgba(52,211,153,0.15)" stroke="#34d399" stroke-width="2"/>
+                            <text x="420" y="230" fill="#6ee7b7" font-size="12" text-anchor="middle" font-family="Consolas">/tmp (tmpfs)</text>
+                            <text x="420" y="345" fill="#94a3b8" font-size="9" text-anchor="middle" font-family="Consolas">sess_*</text>
+                        </g>
+
+                        <g class="component" id="comp-502">
+                            <polygon points="250,320 320,280 320,320 250,360" fill="none" stroke="#fbbf24" stroke-width="2"/>
+                            <polygon points="250,320 320,280 390,320 320,360" fill="rgba(251,191,36,0.15)" stroke="#fbbf24" stroke-width="2"/>
+                            <text x="320" y="270" fill="#fcd34d" font-size="12" text-anchor="middle" font-family="Consolas">HTTP 502</text>
+                        </g>
+
+                        <path id="arrow1" d="M 190 200 L 250 200" stroke="#475569" stroke-width="2" stroke-dasharray="5,5" opacity="0.3"/>
+                        <path id="arrow2" d="M 390 200 L 450 200" stroke="#475569" stroke-width="2" stroke-dasharray="5,5" opacity="0.3"/>
+                        <path id="arrow3" d="M 520 240 L 420 280" stroke="#475569" stroke-width="2" stroke-dasharray="5,5" opacity="0.3"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="panel-title">Paso Actual</div>
+                <div class="step-info">
+                    <div class="step-number" id="stepNum">PASO 0</div>
+                    <div class="step-title" id="stepTitle">Inicializando...</div>
+                    <div class="step-description" id="stepDesc">Preparando simulación del flujo PHP2Shell</div>
+                </div>
+                <div class="memory-indicator">
+                    <div><span class="label">memory_limit:</span> <span class="value">4M</span></div>
+                    <div><span class="label">memory.events:</span> <span class="value">oom 0 | oom_kill 0</span></div>
+                    <div><span class="label">SAPI:</span> <span class="value">PHP-FPM (FastCGI)</span></div>
+                    <div><span class="label">session.upload_progress:</span> <span class="value">enabled</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="code-panel">
+            <div class="panel-title">Logs de la Ejecución</div>
+            <div class="code-block">
+                <div class="code-line" id="log-0"><span class="line-number">01</span>[INIT] Levantando entorno: docker compose up -d php nginx</div>
+                <div class="code-line" id="log-1"><span class="line-number">02</span>[CLIENT] POST / HTTP/1.1 - multipart/form-data</div>
+                <div class="code-line" id="log-2"><span class="line-number">03</span>[CLIENT] Cookie: PHPSESSID=abc123... PHP_SESSION_UPLOAD_PROGRESS=k</div>
+                <div class="code-line" id="log-3"><span class="line-number">04</span>[NGINX] client_body_buffer_size exceeded -> writing to client_temp</div>
+                <div class="code-line" id="log-4"><span class="line-number">05</span>[NGINX] proxy_pass to fastcgi://php:9000</div>
+                <div class="code-line" id="log-5"><span class="line-number">06</span>[PHP-FPM] request startup: parsing multipart body...</div>
+                <div class="code-line" id="log-6"><span class="line-number">07</span>[PHP] session.upload_progress handler active (no session_start required)</div>
+                <div class="code-line" id="log-7"><span class="line-number">08</span>[PHP] Building upload_progress array, re-serializing session...</div>
+                <div class="code-line" id="log-8"><span class="line-number">09</span>[PHP] Zend MM allocating: emalloc/erealloc for keys/values/buckets</div>
+                <div class="code-line" id="log-9"><span class="line-number">10</span>PHP Fatal error: Allowed memory size of 4194304 bytes exhausted (tried to allocate X bytes)</div>
+                <div class="code-line" id="log-10"><span class="line-number">11</span>PHP Stack trace: in Unknown on line 0</div>
+                <div class="code-line" id="log-11"><span class="line-number">12</span>[PHP-FPM] WARNING: [pool www] child 23 exited with code 70</div>
+                <div class="code-line" id="log-12"><span class="line-number">13</span>[PHP-FPM] NOTICE: [pool www] child 45 started</div>
+                <div class="code-line" id="log-13"><span class="line-number">14</span>[NGINX] upstream prematurely closed connection while reading response header</div>
+                <div class="code-line" id="log-14"><span class="line-number">15</span>[NGINX] recv() failed (104: Connection reset by peer) while reading response</div>
+                <div class="code-line" id="log-15"><span class="line-number">16</span>[CLIENT] HTTP/1.1 502 Bad Gateway</div>
+                <div class="code-line" id="log-16"><span class="line-number">17</span>[FILESYSTEM] sess_abc123... written to /tmp (tmpfs) survives worker death</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Laboratorio PHP2Shell | CVE-2026-109618 / CVE-2026-109619 | ÚNICAMENTE USO EDUCATIVO EN ENTORNOS AISLADOS
+        </div>
+    </div>
+
+    <script>
+        const steps = [
+            { num: 0, title: "Inicialización", desc: "Entorno Docker levantado con PHP 8.5.11 vulnerable + nginx", components: [], logs: [0] },
+            { num: 1, title: "Petición HTTP", desc: "Cliente envía POST multipart con PHPSESSID y PHP_SESSION_UPLOAD_PROGRESS", components: ["comp-client"], logs: [1,2] },
+            { num: 2, title: "Proxy FastCGI", desc: "Nginx recibe el cuerpo y lo reenvía por FastCGI al pool PHP-FPM", components: ["comp-client", "comp-nginx"], logs: [3,4] },
+            { num: 3, title: "Request Startup", desc: "Worker PHP-FPM recibe la petición, inicia parsing multipart", components: ["comp-client", "comp-nginx", "comp-fpm"], logs: [5] },
+            { num: 4, title: "Handler de Upload Progress", desc: "session.upload_progress activo - crea/abre sesión sin session_start()", components: ["comp-client", "comp-nginx", "comp-fpm"], logs: [6,7] },
+            { num: 5, title: "Crecimiento de Estructuras", desc: "Zend MM asigna memoria para array de progreso, hash table, buckets", components: ["comp-client", "comp-nginx", "comp-fpm"], logs: [8] },
+            { num: 6, title: "OOM - memory_limit Excedido", desc: "Al superar memory_limit=4M, Zend MM llama zend_bailout()", components: ["comp-fpm"], logs: [9,10] },
+            { num: 7, title: "Muerte del Worker", desc: "Worker aborta con exit_group(70), maestro FPM lo detecta", components: ["comp-fpm"], logs: [11] },
+            { num: 8, title: "Reemplazo del Worker", desc: "php-fpm-spawner crea nuevo worker para mantener el pool", components: ["comp-fpm"], logs: [12] },
+            { num: 9, title: "Nginx Detecta Corte", desc: "Conexión FastCGI cerrada prematuramente", components: ["comp-nginx"], logs: [13,14] },
+            { num: 10, title: "Respuesta 502", desc: "Nginx responde Bad Gateway al cliente", components: ["comp-nginx", "comp-502"], logs: [15] },
+            { num: 11, title: "Sesión Persistente", desc: "Archivo sess_* ya escrito en /tmp (tmpfs) sobrevive a muerte del worker", components: ["comp-tmpfs"], logs: [16] }
+        ];
+
+        let currentStep = 0;
+        let isPlaying = false;
+        let playInterval = null;
+
+        function updateDisplay() {
+            document.getElementById('stepNum').textContent = `PASO ${steps[currentStep].num}`;
+            document.getElementById('stepTitle').textContent = steps[currentStep].title;
+            document.getElementById('stepDesc').textContent = steps[currentStep].desc;
+
+            document.querySelectorAll('.component').forEach(c => {
+                c.classList.remove('active', 'glow-red', 'glow-cyan', 'glow-green');
+            });
+
+            steps[currentStep].components.forEach((compId, idx) => {
+                const comp = document.getElementById(compId);
+                if (comp) {
+                    comp.classList.add('active');
+                    if (compId === 'comp-fpm' && currentStep >= 6 && currentStep <= 8) {
+                        comp.classList.add('glow-red');
+                        if (currentStep === 7) {
+                            document.getElementById('fpm-exit').style.opacity = '1';
+                        }
+                    } else if (compId === 'comp-nginx') {
+                        comp.classList.add('glow-cyan');
+                    } else if (compId === 'comp-tmpfs') {
+                        comp.classList.add('glow-green');
+                    } else {
+                        comp.classList.add('glow-red');
+                    }
+                }
+            });
+
+            if (currentStep < 7) {
+                document.getElementById('fpm-exit').style.opacity = '0';
+            }
+
+            document.querySelectorAll('.code-line').forEach(line => {
+                line.classList.remove('active');
+            });
+            steps[currentStep].logs.forEach(logId => {
+                const line = document.getElementById(`log-${logId}`);
+                if (line) {
+                    line.classList.add('active');
+                    line.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        }
+
+        document.getElementById('btnPlay').addEventListener('click', () => {
+            if (isPlaying) return;
+            isPlaying = true;
+            document.getElementById('btnPlay').classList.add('active');
+            document.getElementById('btnPause').classList.remove('active');
+            playInterval = setInterval(() => {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    updateDisplay();
+                } else {
+                    clearInterval(playInterval);
+                    isPlaying = false;
+                    document.getElementById('btnPlay').classList.remove('active');
+                }
+            }, 1500);
+        });
+
+        document.getElementById('btnPause').addEventListener('click', () => {
+            if (!isPlaying) return;
+            clearInterval(playInterval);
+            isPlaying = false;
+            document.getElementById('btnPlay').classList.remove('active');
+            document.getElementById('btnPause').classList.add('active');
+        });
+
+        document.getElementById('btnNext').addEventListener('click', () => {
+            if (isPlaying) {
+                clearInterval(playInterval);
+                isPlaying = false;
+                document.getElementById('btnPlay').classList.remove('active');
+            }
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateDisplay();
+            }
+        });
+
+        document.getElementById('btnPrev').addEventListener('click', () => {
+            if (isPlaying) {
+                clearInterval(playInterval);
+                isPlaying = false;
+                document.getElementById('btnPlay').classList.remove('active');
+            }
+            if (currentStep > 0) {
+                currentStep--;
+                updateDisplay();
+            }
+        });
+
+        document.getElementById('btnReset').addEventListener('click', () => {
+            if (isPlaying) {
+                clearInterval(playInterval);
+                isPlaying = false;
+                document.getElementById('btnPlay').classList.remove('active');
+            }
+            currentStep = 0;
+            document.getElementById('fpm-exit').style.opacity = '0';
+            updateDisplay();
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>
