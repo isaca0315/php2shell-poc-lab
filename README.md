@@ -304,23 +304,19 @@ Variante mod_php real (el SAPI donde se documenta el RCE de 618):
 
 ### Actividad de sistemas operativos
 
-El acto 1 tiene una actividad guiada para estudiar **memoria, procesos y
-sistemas de archivos** con evidencia real (`/proc`, cgroup v2, `strace`,
-`pidstat`, montajes, inodos y logs):
+El acto 1 incluye una actividad corta para observar el OOM desde **memoria,
+procesos y sistemas de archivos** usando evidencia real (`/proc`, cgroup v2,
+`strace`, montajes, inodos y logs):
 
 ```bash
 ./lab/os-activity/run-activity.sh --start
 ```
 
-- Guía: [`lab/os-activity/README.md`](lab/os-activity/README.md)
+- Guía corta: [`lab/os-activity/README.md`](lab/os-activity/README.md)
 - Entregable único: [`lab/os-activity/entrega/informe-php2shell.pdf`](lab/os-activity/entrega/informe-php2shell.pdf)
-- Cómo regenerar el PDF: [`lab/os-activity/entrega/LEEME.md`](lab/os-activity/entrega/LEEME.md)
-- Borrador opcional (no se entrega): [`lab/os-activity/worksheet.md`](lab/os-activity/worksheet.md)
 
-Reproduce el OOM del acto 1 y explica por qué es un fallo de **memoria de
-usuario** (Zend MM) y no un OOM del kernel, cómo FPM repone el worker y qué
-papel juega el `tmpfs` de `/tmp`. El estudiante entrega un solo PDF con todo
-el proceso y las capturas de la evidencia.
+El estudiante entrega **un solo PDF** con el proceso y cuatro capturas. No
+hay hoja de trabajo ni carpeta de evidencias que entregar.
 
 ## 9. Parar y limpiar
 

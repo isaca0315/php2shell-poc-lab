@@ -211,7 +211,6 @@ echo "== [5/6] Resumen =="
   echo
   echo "## Siguiente paso"
   echo "Usa estas evidencias para completar el PDF de \`lab/os-activity/entrega/\`."
-  echo "El cuaderno \`worksheet.md\` es solo un borrador y no se entrega."
 } >"$OUT/summary.md"
 
 sed -n '1,160p' "$OUT/summary.md"

@@ -66,42 +66,25 @@ lab/reports/<UTC>-evidence.txt         # collect-evidence.sh
 
 ---
 
-## Actividad OS — memoria, procesos y sistemas de archivos
+## Actividad OS — memoria, procesos y archivos
 
-El acto 1 se puede convertir en una actividad de sistemas operativos. En vez
-de quedarse en “el worker cayó”, se instrumentan y correlacionan:
-
-- **memoria:** Zend MM vs cgroup v2 (`memory.current/peak/max/events`),
-  `VmSize`/`VmRSS`, page faults y `mmap` de 2 MiB;
-- **procesos:** maestro/worker FPM, `exit code 70`, `exit_group(70)`, respawn,
-  `pids.current/max` y el `502` de nginx;
-- **filesystem:** `/tmp` como `tmpfs` (64 MiB, `noexec`), inodo/modo de
-  `sess_*`, rootfs `ro` y la diferencia entre escribir e interpretar un
-  archivo.
+Actividad corta sobre el OOM del acto 1. El estudiante observa la caída desde
+tres capas y entrega **un solo PDF** con el proceso y cuatro capturas.
 
 ```bash
-# Flujo completo: baseline -> sesión -> strace + OOM -> snapshot final
-./lab/os-activity/run-activity.sh --start
+# Flujo completo: baseline -> sesión -> traza + OOM -> snapshot final
+./lab/os-activity/run-activity.sh --start --fresh
 
-# Sin strace (solo /proc, cgroup, pidstat y logs)
-./lab/os-activity/run-activity.sh --start --no-trace
-
-# Evidencias y resumen
-ls -la lab/os-activity/out/latest/
+# Sin strace
+./lab/os-activity/run-activity.sh --start --fresh --no-trace
 ```
 
-Material:
+- Guía corta: [`os-activity/README.md`](os-activity/README.md)
+- Entregable: [`os-activity/entrega/informe-php2shell.pdf`](os-activity/entrega/informe-php2shell.pdf)
+- Scripts: `os-activity/collect-snapshot.sh`, `trace-worker.sh`, `run-activity.sh`
 
-- [`os-activity/README.md`](os-activity/README.md) — guía del alumno
-- [`os-activity/entrega/informe-php2shell.pdf`](os-activity/entrega/informe-php2shell.pdf) — **entregable único**
-- [`os-activity/entrega/LEEME.md`](os-activity/entrega/LEEME.md) — cómo regenerar el PDF
-- [`os-activity/worksheet.md`](os-activity/worksheet.md) — borrador opcional, no se entrega
-- `os-activity/collect-snapshot.sh`, `trace-worker.sh`, `run-activity.sh` (ayudantes para recolectar evidencias)
-
-> La actividad es **solo del acto 1**. No incluye RCE ni heap grooming; el
-> target de entrenamiento solo se usa, si está levantado, para comparar
-> montajes. El estudiante entrega **un solo PDF** con el proceso completo y
-> las capturas; no entrega Markdown, hojas sueltas ni la carpeta `out/`.
+> Solo acto 1. No incluye RCE ni heap grooming. No hay hoja de trabajo ni
+> carpeta `out/` que entregar.
 
 ---
 
