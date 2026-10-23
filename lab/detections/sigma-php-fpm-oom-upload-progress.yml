@@ -29,3 +29,4 @@ level: high
 tags:
   - attack.t1190
   - attack.t1499
+  - cwe.824

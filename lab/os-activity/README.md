@@ -4,8 +4,7 @@ Actividad corta para observar un **OOM de PHP** desde tres capas: memoria,
 procesos y sistemas de archivos. El disparador es benigno y no incluye RCE ni
 heap grooming.
 
-Todo se hace con **comandos de Linux**. No hay scripts de actividad, plantilla
-de informe ni generador de PDF.
+Todo se hace con **comandos de Linux**.
 
 ## 1. Qué vas a observar
 
@@ -15,8 +14,11 @@ de informe ni generador de PDF.
 | Procesos | ¿Quién muere y quién lo reemplaza? | `exit_group(70)`, `child ... exited`, `child ... started` |
 | Archivos | ¿Qué queda escrito después de la caída? | `/tmp` como `tmpfs`, `sess_*`, inodo, modo, rootfs `ro` |
 
-La respuesta corta: muere el **worker** de PHP-FPM, no el kernel; el maestro
-lo reemplaza y nginx devuelve **502**. La sesión queda en `/tmp`.
+En corto: `memory_limit` es un contador de PHP (Zend MM), no la RAM del
+contenedor. Al superarlo, PHP aborta la petición; el hijo de FPM sale con
+código 70 y el maestro lo reemplaza. El kernel no participa: `memory.events`
+sigue en `oom 0`. nginx ve el corte y devuelve **502**, y la sesión ya escrita
+queda en `/tmp`.
 
 ## 2. Levantar el laboratorio
 
@@ -80,7 +82,9 @@ docker exec php2shell-lab-php-1 \
 ```
 
 Debe responder `HTTP 200` y mostrar un archivo `sess_...` con modo `600` y
-dueño `www-data:www-data`.
+dueño `www-data:www-data`. Ese archivo lo escribe el handler de
+`session.upload_progress` durante el parseo del cuerpo, antes de ejecutar
+`index.php`: no hace falta `session_start()` en la aplicación.
 
 ## 5. Trazar el worker (captura 2)
 
@@ -169,31 +173,19 @@ sesión sigue en `/tmp` aunque el worker haya muerto.
 
 ## 8. Entregable
 
-Un **PDF hecho por ti**. No hay plantilla ni script de conversión: escribe el
-informe en el editor que prefieras (Word, LibreOffice, Markdown, Google Docs,
-etc.), pega las capturas y expórtalo a PDF.
+Entrega un **PDF** con el proceso y las capturas.
 
-Estructura sugerida:
+Estructura:
 
 1. Portada con tu nombre, fecha y objetivo.
-2. Entorno y límites del contenedor.
-3. Memoria: antes, después y `memory.events`.
-4. Traza: `mmap`, fatal y `exit_group(70)`.
-5. Procesos: worker que muere, worker nuevo y `502`.
-6. Archivos: `tmpfs`, rootfs de solo lectura y `sess_*`.
-7. Conclusiones y comandos usados.
+2. **Identificadores**: `CID`, ruta del cgroup (`CG`), PID del worker antes/después y `PHPSESSID` usado.
+3. **Memoria**: `memory.current`, `memory.peak`, `memory.max`, `memory.events` y `VmRSS` (antes/después).
+4. **Traza**: fragmento de `strace` con `mmap` y `exit_group(70)` (con timestamps).
+5. **Procesos/HTTP**: `docker top` con cambio de PID, `HTTP 502` y logs con `exited with code 70` / `started`.
+6. **Archivos**: `findmnt` (`/` ro, `/tmp` tmpfs), `stat` de `sess_*` (inodo, modo, dueño, tamaño) y fallo de `touch /var/www/html/prueba`.
+7. Conclusiones breves con los valores obtenidos.
 
-Incluye estas cuatro capturas, cada una con una frase que explique qué
-demuestra:
-
-| Captura | Qué debe mostrar |
-|---|---|
-| 1 | Memoria antes/después y `memory.events` en cero |
-| 2 | `mmap`, fatal de PHP y `exit_group(70)` |
-| 3 | Muerte del worker, nuevo worker y `502` |
-| 4 | `tmpfs`, rootfs de solo lectura y `sess_*` |
-
-No entregues scripts, archivos sueltos ni capturas separadas. Solo el PDF.
+**Requisito:** deben aparecer los **valores exactos** de *esta* ejecución. El `sess_*` debe corresponder al `PHPSESSID`, el PID trazado debe ser el que muere y los logs deben coincidir con esa misma corrida. No entregues scripts ni archivos sueltos, solo el PDF.
 
 ## 9. Limpiar
 

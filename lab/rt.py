@@ -390,7 +390,7 @@ def phase_impact(
         ),
         "limitations": [
             "Mide disponibilidad y caida de worker; no ejecuta codigo.",
-            "El RCE de CVE-2026-109618 requiere heap grooming sobre mod_php y queda fuera de alcance.",
+            "La fuga de CVE-2026-109618 y el RCE de CVE-2026-109619 requieren heap grooming y quedan fuera de alcance.",
         ],
     }
 

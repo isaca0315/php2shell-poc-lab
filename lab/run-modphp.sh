@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Acto 1b: mismo trigger contra PHP 8.5.11 + mod_php (Apache).
 #
-# El README del lab documenta que el RCE de CVE-2026-109618 se demuestra en
+# El README del lab documenta que el RCE de CVE-2026-109619 se demuestra en
 # mod_php. Este script reproduce el comportamiento observable del SAPI real
 # (fatal durante request startup, respuesta 500, posible SIGSEGV) SIN incluir
 # heap grooming ni exploit de RCE.
@@ -61,7 +61,7 @@ grep -E 'Fatal error|Allowed memory|SIGSEGV|Segmentation|AH00052|exited|signal' 
 
 echo
 echo "[i] Logs: lab/reports/modphp-${TS}.log"
-echo "[i] Nota: el RCE de 618 requiere heap grooming sobre mod_php; este script"
+echo "[i] Nota: el RCE de 619 requiere heap grooming sobre mod_php; este script"
 echo "    solo demuestra el fallo de memoria y el comportamiento del SAPI real."
 
 if [ "$CLEANUP" -eq 1 ]; then

@@ -1,6 +1,6 @@
 # Variante mod_php REAL (PHP 8.5.11 + Apache) para el PoC del CVE.
 #
-# El README del lab indica que el RCE de CVE-2026-109618 se demuestra en
+# El README del lab indica que el RCE de CVE-2026-109619 se demuestra en
 # mod_php, no en FPM. Este compose levanta el mismo trigger contra mod_php
 # para observar el comportamiento real del SAPI (fatal, workers, posible
 # SIGSEGV) sin incluir heap grooming ni exploit de RCE.

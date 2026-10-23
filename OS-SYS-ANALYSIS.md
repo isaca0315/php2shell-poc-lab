@@ -7,8 +7,7 @@
 >
 > Este documento complementa la guía práctica
 > [`lab/os-activity/README.md`](lab/os-activity/README.md). La actividad se
-> resuelve con **comandos de Linux**, sin scripts auxiliares ni plantilla de
-> informe.
+> resuelve con **comandos de Linux**.
 
 ## 1. Fundamentos
 
@@ -172,11 +171,13 @@ En este laboratorio se observa el primer caso. El cgroup sigue por debajo de
 ## 5. Límites del laboratorio
 
 - No se implementa heap grooming, estructuras falsas, direcciones de memoria
-  ni llamadas a `system()`.
+  ni llamadas a `system()`. El defecto de base es **CWE-824** (*Access of
+  Uninitialized Pointer*): el `bailout` abandona la operación con punteros
+  sin limpiar.
 - El acto 1 demuestra **DoS controlado + escritura de sesión**, no RCE por
   corrupción de memoria.
 - En FPM el fallo termina el worker y el maestro lo reemplaza; el RCE completo
-  de CVE-2026-109618 se documenta en `mod_php`, que tiene otro ciclo de vida.
+  de CVE-2026-109619 se documenta en `mod_php`, que tiene otro ciclo de vida.
 - El RCE del acto 2 se ejecuta contra `target/`, una aplicación PHP vulnerable
   por diseño. No explota CVE-2026-109618/619.
 

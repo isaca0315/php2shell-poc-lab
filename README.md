@@ -9,9 +9,9 @@ parseo multipart y **antes** de que se ejecute el script de la aplicación.
 > estructuras falsas, direcciones de memoria ni llamadas a `system()`; por
 > tanto **no es un exploit de RCE**. No lo expongas fuera de `127.0.0.1`.
 >
-> **Aviso.** Las versiones afectadas son PHP < 8.2.35, < 8.3.36, < 8.4.27 y
-> < 8.5.12. La única mitigación completa es actualizar. Lo de aquí es para
-> un entorno de clase/CTF aislado.
+> **Aviso.** Las versiones afectadas son 8.2 < 8.2.35, 8.3 < 8.3.36,
+> 8.4 < 8.4.27 y 8.5 < 8.5.12. La única mitigación completa es actualizar.
+> Lo de aquí es para un entorno de clase/CTF aislado.
 
 ---
 
@@ -21,17 +21,20 @@ parseo multipart y **antes** de que se ejecute el script de la aplicación.
 .
 ├── docker-compose.yml          # PHP 8.5.11 (vulnerable) + nginx, red dedicada
 ├── docker-compose.fixed.yml    # PHP 8.5.12 (parcheado), puerto 8081
+├── docker-compose.modphp.yml   # variante mod_php (Apache), puerto 8083
 ├── php/php.ini                 # memory_limit=4M, upload_progress On
 ├── php/www.conf                # 1 worker, logs de hijos a stderr
 ├── nginx/default.conf          # fastcgi_pass a php:9000
 ├── www/index.php               # script trivial: el fallo ocurre antes de él
 ├── trigger.py                  # genera el multipart (3 modos)
-└── collect-evidence.sh         # recoge logs, sesiones, dmesg, coredumps
+├── collect-evidence.sh         # recoge logs, sesiones, dmesg, coredumps
+├── lab/                        # engagement red team (lab/README.md)
+└── target/                     # app vulnerable por diseño (acto 2)
 ```
 
 Aislamiento aplicado:
 
-- nginx solo publica `127.0.0.1:8080` (y el fijo `127.0.0.1:8081`).
+- Todos los puertos se publican solo en `127.0.0.1` (8080, 8081, 8082 y 8083).
 - Red bridge propia por proyecto; PHP no publica el 9000.
 - `read_only: true` + `tmpfs` acotados para `/tmp` y `/var/run`.
 - `cap_drop: ALL` y solo las capabilities mínimas para FPM/nginx.
@@ -175,19 +178,27 @@ y el tamaño exactos.
   inserción en la hash table ya había incrementado `nNumUsed`/`nNumOfElements`
   pero aún no había inicializado el bucket (la clave se asigna después), el
   destructor recorre un bucket no inicializado y lo interpreta como `zval`.
-  Eso es el use-after-free / estado inválido de **CVE-2026-109618**, y es lo
-  que puede convertirse en RCE con heap grooming (no incluido aquí).
-- **CVE-2026-109619** es el otro lado: estado global del worker (sesión,
-  error, decodificadores) que apunta a memoria del request anterior y se lee
-  antes de reinicializarse en el siguiente request. En FPM se confirma RCE
-  cuando la aplicación realiza después una operación adecuada.
+  El resultado es un puntero colgante que sobrevive a la petición: la
+  debilidad de base es **CWE-824** (*Access of Uninitialized Pointer*).
+- **CVE-2026-109618 (divulgación de memoria).** El puntero obsoleto se usa
+  para leer de más. En la siguiente petición el atacante reocupa el espacio
+  liberado y hace que la longitud de la cadena apuntada por el session id
+  parezca mucho mayor que los datos reales. PHP devuelve esa memoria en
+  `Set-Cookie: PHPSESSID=...` (hasta ~67 KB por petición). El exploit lo usa
+  dos veces: una para filtrar la base del heap y otra la base de `libphp`,
+  derrotando ASLR. No se incluye aquí.
+- **CVE-2026-109619 (RCE).** El espacio liberado se reocupa con una
+  `HashTable` falsa cuyo `pDestructor` apunta a `system()` (dirección
+  obtenida con la fuga de 618). Al limpiar el valor al final del request, el
+  motor llama al "destructor" y ejecuta el comando como `www-data`. Tampoco
+  se incluye aquí: requiere heap grooming y estructuras falsas.
 
 Matiz importante para el laboratorio: el aviso de PHP indica que, si el
 *request startup* falla, **FPM termina el hijo** y el maestro lo reemplaza;
 por eso no se consume el estado inválido como en `mod_php` (donde el shutdown
 sí se ejecuta incondicionalmente). En FPM el síntoma observable es
-*caída/reemplazo de worker* y `502`; el RCE completo de 618 está demostrado
-en `mod_php`, no en FPM.
+*caída/reemplazo de worker* y `502`; el RCE completo de 619 está demostrado
+en `mod_php` prefork, no en FPM.
 
 ### 4.3 OOM de PHP vs. OOM del kernel
 
@@ -245,7 +256,7 @@ hijo (el límite duro se alcanza igual); lo que cambia es el manejo interno:
 el OOM se difiere a un punto seguro y no se ejecuta cleanup sobre estado
 inválido. La diferencia **no** se ve con un simple `200 vs 502`; la validación
 fuerte es ejecutar la suite de regresión `oom_*` de php-src contra ambos
-binarios (el equipo de OX reporta 7 fallos en 8.2.34 y 0 en 8.2.35).
+binarios.
 
 ## 7. Mitigación y detección (defensivo)
 
@@ -254,6 +265,8 @@ binarios (el equipo de OX reporta 7 fallos en 8.2.34 y 0 en 8.2.35).
 2. Mientras no se pueda parchear:
    - `session.upload_progress.enabled=0` y, en PHP 8.5,
      `fatal_error_backtraces=0` (mitiga 619, no 618);
+   - `opcache.enable=0` como medida temporal: no corrige el fallo, pero
+     dificulta la ruta de ejecución de código de 619;
    - `memory_limit=-1` **administrado** + límites de cuerpo/RAM en el
      frontend y en el contenedor (según el aviso de PHP). No usar
      `RLIMIT_AS`/`RLIMIT_DATA`: pueden provocar el propio `longjmp` vulnerable;
@@ -261,10 +274,20 @@ binarios (el equipo de OX reporta 7 fallos en 8.2.34 y 0 en 8.2.35).
      `max_input_vars`, `max_multipart_body_parts`, `max_file_uploads` y
      longitud de nombres en nginx/WAF. Ojo: muchas reglas solo inspeccionan
      la primera línea o truncan el cuerpo; hay que mirar el cuerpo completo y
-     aceptar bytes de control.
-3. Detección: correlacionar POST grandes/anómalos, `Fatal ... in Unknown on
-   line 0`, muertes de hijos FPM, `502` y, sobre todo, procesos shell hijos de
-   `php-fpm`/`www-data` (indicador directo de RCE).
+     aceptar bytes de control;
+   - rechazar `multipart/form-data` en el borde si la aplicación no lo
+     necesita y ejecutar PHP con el mínimo privilegio posible.
+
+   Un WAF que corre **como módulo de PHP** no sirve aquí: inspecciona el
+   tráfico cuando PHP ya pasó el control a la aplicación, y este fallo ocurre
+   en el *request startup*, antes. El filtro debe estar en una capa delante
+   de PHP o en el runtime parcheado.
+3. Detección: correlacionar las tres señales —(a) `Set-Cookie: PHPSESSID`
+   anómalamente grande (un id normal tiene 26 caracteres; usa un umbral,
+   p. ej. >64, para no marcar SIDs personalizados), (b) POST multipart grandes
+   con `PHP_SESSION_UPLOAD_PROGRESS` y muchas partes, y (c) `Fatal ... in
+   Unknown on line 0`, muertes de hijos FPM y `502`—. Añadir además procesos
+   shell hijos de `php-fpm`/`www-data` (indicador directo de RCE).
 
 ## 8. Red team lab: de OOM a RCE
 
@@ -291,7 +314,7 @@ Artefactos: `lab/reports/scoreboard.md`, `lab/reports/FLAG.txt`, informes
 `engagement-*.md` y `rce-*.md`, logs FPM/nginx y reglas Sigma/Suricata en
 `lab/detections/`.
 
-Variante mod_php real (el SAPI donde se documenta el RCE de 618):
+Variante mod_php real (el SAPI donde se documenta el RCE de 619):
 
 ```bash
 ./lab/run-modphp.sh      # PHP 8.5.11 + Apache en 127.0.0.1:8083
@@ -315,9 +338,8 @@ LAB_PORT=18080 docker compose up -d php nginx
 - Guía de comandos: [`lab/os-activity/README.md`](lab/os-activity/README.md)
 - Análisis OS de referencia: [`OS-SYS-ANALYSIS.md`](OS-SYS-ANALYSIS.md)
 
-La actividad se resuelve con **comandos de Linux**, sin scripts auxiliares. El
-estudiante entrega **un solo PDF** con el proceso y cuatro capturas. Lo arma
-en el editor que prefiera y lo exporta a PDF: no hay plantilla ni script.
+La actividad se resuelve con **comandos de Linux**. El estudiante entrega
+**un solo PDF** con el proceso y cuatro capturas.
 
 ## 9. Parar y limpiar
 

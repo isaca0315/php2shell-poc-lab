@@ -13,6 +13,11 @@
 > entrenamiento (`target/`). No incluye heap grooming ni exploit del CVE.
 > No expongas nada de esto fuera de loopback.
 
+La debilidad de base es **CWE-824** (*Access of Uninitialized Pointer*):
+`zend_bailout()` abandona la operación y deja punteros sin limpiar. El acto 1
+reproduce el OOM y el corte del worker, no las fases de fuga (CVE-2026-109618)
+ni de RCE (CVE-2026-109619).
+
 ---
 
 ## Misión y puntuación
@@ -47,9 +52,6 @@ La flag se escribe en `lab/reports/FLAG.txt` y el scoreboard en
 
 # Acto 1b: mismo trigger contra mod_php real (8.5.11 + Apache)
 ./lab/run-modphp.sh
-
-# Al terminar, limpiar
-./lab/run-lab.sh --cleanup
 ```
 
 Artefactos:
@@ -78,8 +80,7 @@ LAB_PORT=18080 docker compose up -d php nginx
 - Guía de comandos: [`os-activity/README.md`](os-activity/README.md)
 
 > Solo acto 1. No incluye RCE ni heap grooming. La actividad usa únicamente
-> comandos de Linux, sin scripts auxiliares. El entregable es un PDF armado
-> por el estudiante, sin plantilla ni script.
+> comandos de Linux y el entregable es un PDF.
 
 ---
 
@@ -87,7 +88,8 @@ LAB_PORT=18080 docker compose up -d php nginx
 
 1. **Autorización por escrito**, aunque sea tu propio lab.
 2. **Alcance:** `http://127.0.0.1:8080/` (CVE), `http://127.0.0.1:8082/`
-   (target RCE) y `http://127.0.0.1:8081/` (parcheado, opcional).
+   (target RCE), `http://127.0.0.1:8081/` (parcheado, opcional) y
+   `http://127.0.0.1:8083/` (mod_php, opcional).
 3. **Ventana y criterio de parada:** si el host pierde capacidad de respuesta,
    `Ctrl-C` y `docker compose down -v`.
 4. **Datos:** no uses archivos reales; los scripts generan basura.
@@ -213,9 +215,9 @@ python3 lab/rt.py impact --url http://127.0.0.1:8081/ --repeat 3
 Ambos devuelven 502: el límite duro se alcanza igual. El parche cambia el
 manejo interno del OOM, no la disponibilidad bajo carga extrema.
 
-### 3.5 Variante real mod_php (Apache + PHP 8.5.11)
+### Variante real mod_php (Apache + PHP 8.5.11)
 
-El RCE de CVE-2026-109618 se documenta en **mod_php**, no en FPM. El lab incluye
+El RCE de CVE-2026-109619 se documenta en **mod_php**, no en FPM. El lab incluye
 esa variante para reproducir el comportamiento real del SAPI:
 
 ```bash
@@ -346,7 +348,20 @@ Reglas:
 - `lab/detections/sigma-php-fpm-oom-upload-progress.yml`
 - `lab/detections/sigma-php-fpm-worker-respawn.yml`
 - `lab/detections/sigma-nginx-fastcgi-502.yml`
+- `lab/detections/sigma-php-session-id-leak.yml`
 - `lab/detections/suricata-php2shell.rules`
+
+Señales a correlacionar (las tres juntas son la firma del ataque):
+
+1. `Set-Cookie` con `PHPSESSID` anormalmente grande: es la fuga de
+   CVE-2026-109618. Un id normal tiene 26 caracteres; usa un umbral (p. ej.
+   >64) para no marcar SIDs personalizados.
+2. `POST` multipart grandes, con muchas partes y `PHP_SESSION_UPLOAD_PROGRESS`.
+3. `Fatal ... in Unknown on line 0` + caída/reemplazo de worker + `502`.
+
+> Un WAF que corre **como módulo de PHP** no ve nada de esto: cuando
+> inspecciona, el handler ya se ejecutó. La detección tiene que estar delante
+> de PHP o en los logs del sistema.
 
 Consultas rápidas:
 
@@ -354,6 +369,9 @@ Consultas rápidas:
 # Elastic / OpenSearch
 message:"Allowed memory size" and message:"in Unknown on line 0"
 status:502 and (message:"unexpected FastCGI record" or message:"upstream prematurely closed")
+# Buscar Set-Cookie largas (el nombre del campo depende de tu pipeline;
+# ordena por longitud o aplica el umbral >64 sobre el valor de PHPSESSID)
+http.response.headers.set_cookie:*PHPSESSID=*
 ```
 
 ## Fase 7 — Captura de la flag
@@ -423,7 +441,7 @@ el stack. No persiste en el host.
 
 | Fuera de alcance | Motivo |
 |---|---|
-| Exploit de CVE-2026-109618/619 | Requiere heap grooming y engineering específico; no se implementa |
+| Exploit de CVE-2026-109618 (fuga) y CVE-2026-109619 (RCE) | Requiere heap grooming y engineering específico; no se implementa |
 | RCE vía corrupción de memoria | El RCE del acto 2 es una app vulnerable por diseño, no el CVE |
 | Persistencia / pivoting | No aporta al objetivo y aumenta el riesgo |
 | Evasión WAF avanzada | Se documenta como recomendación defensiva |

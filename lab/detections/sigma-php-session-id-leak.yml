@@ -1,0 +1,33 @@
+title: PHP Session Cookie With Oversized Identifier (Memory Leak)
+id: 8f4b1c6d-2e7a-4b93-9d05-7c1a3e5f9b42
+status: experimental
+description: >
+  Detecta respuestas con `Set-Cookie: PHPSESSID=` de longitud anomala. Un id
+  de sesion normal tiene 26 caracteres; CVE-2026-109618 devuelve memoria del
+  worker (hasta ~67 KB) a traves de la cookie. Correlacionar con POST
+  multipart grandes, fatals en request startup y 502.
+references:
+  - https://www.php.net/manual/en/session.configuration.php
+  - https://www.php.net/manual/en/session.upload-progress.php
+author: php2shell-lab
+date: 2026/10/23
+logsource:
+  category: webserver
+detection:
+  selection:
+    http.response.headers.set_cookie|contains: 'PHPSESSID='
+  oversized:
+    http.response.headers.set_cookie|re: 'PHPSESSID=[A-Za-z0-9_-]{64,}'
+  condition: selection and oversized
+fields:
+  - client_ip
+  - url
+  - http.response.headers.set_cookie
+falsepositives:
+  - Aplicaciones con session.sid_length personalizado mayor que 63
+  - Cookies que concatenan datos de aplicacion tras el id
+level: high
+tags:
+  - attack.t1190
+  - attack.t1499
+  - cwe.824
