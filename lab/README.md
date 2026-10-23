@@ -72,19 +72,14 @@ Actividad corta sobre el OOM del acto 1. El estudiante observa la caída desde
 tres capas y entrega **un solo PDF** con el proceso y cuatro capturas.
 
 ```bash
-# Flujo completo: baseline -> sesión -> traza + OOM -> snapshot final
-./lab/os-activity/run-activity.sh --start --fresh
-
-# Sin strace
-./lab/os-activity/run-activity.sh --start --fresh --no-trace
+LAB_PORT=18080 docker compose up -d php nginx
 ```
 
-- Guía corta: [`os-activity/README.md`](os-activity/README.md)
-- Scripts: `os-activity/collect-snapshot.sh`, `trace-worker.sh`, `run-activity.sh`
+- Guía de comandos: [`os-activity/README.md`](os-activity/README.md)
 
-> Solo acto 1. No incluye RCE ni heap grooming. El entregable es un PDF
-> armado por el estudiante, sin plantilla ni script. No hay carpeta `out/`
-> que entregar.
+> Solo acto 1. No incluye RCE ni heap grooming. La actividad usa únicamente
+> comandos de Linux, sin scripts auxiliares. El entregable es un PDF armado
+> por el estudiante, sin plantilla ni script.
 
 ---
 

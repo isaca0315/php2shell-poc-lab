@@ -309,13 +309,14 @@ procesos y sistemas de archivos** usando evidencia real (`/proc`, cgroup v2,
 `strace`, montajes, inodos y logs):
 
 ```bash
-./lab/os-activity/run-activity.sh --start
+LAB_PORT=18080 docker compose up -d php nginx
 ```
 
-- Guía corta: [`lab/os-activity/README.md`](lab/os-activity/README.md)
+- Guía de comandos: [`lab/os-activity/README.md`](lab/os-activity/README.md)
 
-El estudiante entrega **un solo PDF** con el proceso y cuatro capturas. Lo
-arma en el editor que prefiera y lo exporta a PDF: no hay plantilla ni script.
+La actividad se resuelve con **comandos de Linux**, sin scripts auxiliares. El
+estudiante entrega **un solo PDF** con el proceso y cuatro capturas. Lo arma
+en el editor que prefiera y lo exporta a PDF: no hay plantilla ni script.
 
 ## 9. Parar y limpiar
 
