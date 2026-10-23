@@ -5,6 +5,8 @@
 > **[VER DISCLAIMER / AVISO LEGAL](DISCLAIMER.md)**  
 > ÚNICAMENTE para uso educativo en entornos locales aislados (`127.0.0.1`). Uso indebido puede ser ilegal.
 
+**[▶ Ver animación interactiva del flujo](php2shell-anim.html)**
+
 Reproductor **local, aislado y no armado** del fallo que se alcanza al agotar
 `memory_limit` dentro del handler de `session.upload_progress`, durante el
 parseo multipart y **antes** de que se ejecute el script de la aplicación.
