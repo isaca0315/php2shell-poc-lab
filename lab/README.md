@@ -92,10 +92,9 @@ ls -la lab/os-activity/out/latest/
 
 Material:
 
-- [`os-activity/README.md`](os-activity/README.md) — guía y tareas.
-- [`os-activity/worksheet.md`](os-activity/worksheet.md) — hoja del alumno.
-- [`os-activity/instructor-notes.md`](os-activity/instructor-notes.md) — soluciones.
-- `os-activity/collect-snapshot.sh`, `trace-worker.sh`, `run-activity.sh`.
+- [`os-activity/README.md`](os-activity/README.md) — guía del alumno
+- [`os-activity/worksheet.md`](os-activity/worksheet.md) — hoja para completar
+- `os-activity/collect-snapshot.sh`, `trace-worker.sh`, `run-activity.sh` (ayudantes para recolectar evidencias)
 
 > La actividad es **solo del acto 1**. No incluye RCE ni heap grooming; el
 > target de entrenamiento solo se usa, si está levantado, para comparar

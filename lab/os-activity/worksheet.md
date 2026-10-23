@@ -1,23 +1,25 @@
-# Hoja de trabajo — Actividad OS (memoria, procesos, filesystem)
+# Cuaderno de campo — PHP2Shell desde dentro
 
-**Nombre:** __________________________  
-**Fecha:** ___________________________  
-**Entorno:** `php:8.5.11-fpm` + nginx + cgroup v2  
+**Nombre:** __________________________
+**Fecha:** ___________________________
+**Entorno:** `php:8.5.11-fpm` + nginx + cgroup v2
 **Directorio de evidencias:** `lab/os-activity/out/<timestamp>-activity/`
 
-> Rellena las tablas con **evidencia real** (valores, rutas, PIDs, logs).
-> No hace falta que los valores coincidan con los del ejemplo: lo importante
-> es que expliques lo que observas.
+> Rellena esto como si se lo explicaras a alguien que no estuvo delante.
+> Cada fila necesita una fuente: un comando, una ruta o una línea de log.
+> Si no la tienes, la fila no cuenta. Los valores de ejemplo son solo eso:
+> ejemplos. No los copies; busca los tuyos.
 
 ---
 
-## 0. Datos del entorno
+## 0. Ficha de la sesión
 
-| Dato | Valor | Comando / fuente |
+| Dato | Valor | Fuente |
 |---|---|---|
 | Imagen PHP | | `docker inspect -f '{{.Config.Image}}' php2shell-lab-php-1` |
 | Versión PHP | | `docker exec php2shell-lab-php-1 php -v` |
 | `memory_limit` | | `docker exec ... php -i \| grep memory_limit` |
+| URL objetivo | | `curl -sS ...` |
 | cgroup del contenedor | | `find /sys/fs/cgroup ...` |
 | `memory.max` | | `cat $CG/memory.max` |
 | `pids.max` | | `cat $CG/pids.max` |
@@ -25,11 +27,17 @@
 | Montaje de `/tmp` | | `findmnt -T /tmp` |
 | Montaje de `/var/www/html` | | `findmnt -T /var/www/html` |
 
+**¿Qué esperaba encontrar antes de empezar?**
+
+__________________________________________________________________________
+
+__________________________________________________________________________
+
 ---
 
-## 1. Memoria
+## 1. El aire: memoria
 
-### 1.1 Tabla de métricas
+### 1.1 Antes, durante y después
 
 | Métrica | Baseline | Pico / durante | Después | Fuente |
 |---|---:|---:|---:|---|
@@ -45,7 +53,7 @@
 | `minflt/s` (muestra) | | | | `pidstat -r` |
 | `majflt/s` (muestra) | | | | `pidstat -r` |
 
-### 1.2 Evidencia de la traza
+### 1.2 La traza
 
 | Syscall / mensaje | ¿Aparece? | Línea o valor |
 |---|---|---|
@@ -54,7 +62,7 @@
 | `exit_group(70)` | sí / no | |
 | `openat(... /tmp/sess_...)` | sí / no | |
 
-### 1.3 Preguntas
+### 1.3 Mi lectura
 
 1. ¿Qué cuenta `memory_limit` y por qué `VmSize` es mucho mayor?
 
@@ -72,7 +80,7 @@
 
    ______________________________________________________________________
 
-5. ¿Qué representan `minflt` y `majflt`? ¿Cuál esperabas ver en este fallo?
+5. ¿Qué representan `minflt` y `majflt`? ¿Cuál esperabas ver aquí?
 
    ______________________________________________________________________
 
@@ -81,11 +89,15 @@
 
    ______________________________________________________________________
 
+**Una frase que resuma esta capa:**
+
+__________________________________________________________________________
+
 ---
 
-## 2. Procesos
+## 2. Los que sostienen la barra: procesos
 
-### 2.1 Tabla de procesos
+### 2.1 Quién vive, quién muere, quién lo reemplaza
 
 | Dato | Antes | Después |
 |---|---|---|
@@ -99,7 +111,7 @@
 | Estado del worker | | |
 | Nº de hilos | | |
 
-### 2.2 Evidencia de logs
+### 2.2 Los logs
 
 | Log | Línea observada |
 |---|---|
@@ -109,7 +121,7 @@
 | nginx: error FastCGI | |
 | nginx: código HTTP | |
 
-### 2.3 Preguntas
+### 2.3 Mi lectura
 
 1. ¿Qué proceso muere y cuál sobrevive? ¿Por qué?
 
@@ -137,11 +149,15 @@
 
    ______________________________________________________________________
 
+**Una frase que resuma esta capa:**
+
+__________________________________________________________________________
+
 ---
 
-## 3. Sistemas de archivos
+## 3. Lo que queda escrito: sistemas de archivos
 
-### 3.1 Tabla de montajes
+### 3.1 Montajes
 
 | Ruta | FSType | Opciones relevantes | Tamaño | ¿Escritura? |
 |---|---|---|---:|---|
@@ -149,7 +165,7 @@
 | `/var/www/html` | | | | sí / no |
 | `/var/www/html/uploads` (si aplica) | | | | sí / no |
 
-### 3.2 Fichero de sesión
+### 3.2 El fichero de sesión
 
 | Dato | Valor |
 |---|---|
@@ -160,7 +176,14 @@
 | Tamaño | |
 | ¿Sobrevive a `docker compose down`? | |
 
-### 3.3 Preguntas
+### 3.3 La prueba del inodo
+
+| Intento | Inodo | ¿Qué cambió? |
+|---|---:|---|
+| Primer `touch` | | |
+| Tras `rm` y segundo `touch` | | |
+
+### 3.4 Mi lectura
 
 1. ¿Por qué la sesión se escribe en `tmpfs` y no en el rootfs?
 
@@ -179,8 +202,8 @@
 
    ______________________________________________________________________
 
-5. En la prueba de reutilización de inodo, ¿se reutilizó? ¿Qué implica para
-   la caché y para ficheros borrados que siguen abiertos?
+5. En la prueba de inodo, ¿se reutilizó? ¿Qué implica para la caché y para
+   ficheros borrados que siguen abiertos?
 
    ______________________________________________________________________
 
@@ -188,13 +211,15 @@
 
    ______________________________________________________________________
 
+**Una frase que resuma esta capa:**
+
+__________________________________________________________________________
+
 ---
 
-## 4. Correlación
+## 4. El cruce: una caída, tres relojes
 
-Completa la línea temporal:
-
-| t | Evento | Subsistema | Evidencia (ruta/línea) |
+| t | Evento | Capa | Evidencia (ruta/línea) |
 |---|---|---|---|
 | t0 | POST multipart | | |
 | t1 | `mmap` de 2 MiB | | |
@@ -204,7 +229,9 @@ Completa la línea temporal:
 | t5 | `502` de nginx | | |
 | t6 | `sess_*` en `/tmp` | | |
 
-**Narrativa (5–8 líneas):**
+**La explicación en 60 segundos (5–8 líneas):**
+
+__________________________________________________________________________
 
 __________________________________________________________________________
 
@@ -216,31 +243,35 @@ __________________________________________________________________________
 
 ---
 
-## 5. Conclusiones
+## 5. Dudas, trampas y cosas que no cuadraron
 
-1. Una conclusión sobre **memoria**:
+| Lo que vi | Lo que creía | Lo que era en realidad | Fuente |
+|---|---|---|---|
+| | | | |
+| | | | |
+| | | | |
 
-   ______________________________________________________________________
+**¿Qué fue lo más difícil de interpretar?**
 
-2. Una conclusión sobre **procesos**:
+__________________________________________________________________________
 
-   ______________________________________________________________________
+__________________________________________________________________________
 
-3. Una conclusión sobre **filesystem**:
+**¿Qué haría falta para estar seguro de mi conclusión?**
 
-   ______________________________________________________________________
+__________________________________________________________________________
 
-4. ¿Qué te sorprendió o qué te costó más interpretar?
-
-   ______________________________________________________________________
+__________________________________________________________________________
 
 ---
 
 ## 6. Checklist de entrega
 
-- [ ] Tablas completadas con valores reales.
-- [ ] Rutas de evidencias verificadas.
-- [ ] Traza o logs adjuntos/citados.
-- [ ] Narrativa de correlación.
-- [ ] Informe de 1 página.
+- [ ] Ficha de sesión completa.
+- [ ] Tablas de memoria, procesos y filesystem con valores reales.
+- [ ] Cada afirmación tiene una fuente (comando, ruta o log).
+- [ ] Traza o logs citados.
+- [ ] Narrativa de correlación en 5–8 líneas.
+- [ ] Informe de una página.
 - [ ] Comandos reproducibles incluidos.
+- [ ] Evidencias en `lab/os-activity/out/<timestamp>-activity/`.

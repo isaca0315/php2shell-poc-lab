@@ -314,7 +314,6 @@ sistemas de archivos** con evidencia real (`/proc`, cgroup v2, `strace`,
 
 - Guía: [`lab/os-activity/README.md`](lab/os-activity/README.md)
 - Hoja de trabajo: [`lab/os-activity/worksheet.md`](lab/os-activity/worksheet.md)
-- Soluciones: [`lab/os-activity/instructor-notes.md`](lab/os-activity/instructor-notes.md)
 
 Reproduce el OOM del acto 1 y explica por qué es un fallo de **memoria de
 usuario** (Zend MM) y no un OOM del kernel, cómo FPM repone el worker y qué
