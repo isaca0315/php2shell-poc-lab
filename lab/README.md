@@ -9,7 +9,7 @@
 >    diseño** incluida en el lab, leer `/flag.txt` y cerrar el engagement.
 >
 > **Importante:** el RCE del acto 2 **no explota** el CVE de corrupción de
-> memoria. Es una cadena de subida de fichero → webshell sobre un target de
+> memoria. Es una cadena de subida de archivo → webshell sobre un target de
 > entrenamiento (`target/`). No incluye heap grooming ni exploit del CVE.
 > No expongas nada de esto fuera de loopback.
 
@@ -73,11 +73,11 @@ de quedarse en “el worker cayó”, se instrumentan y correlacionan:
 
 - **memoria:** Zend MM vs cgroup v2 (`memory.current/peak/max/events`),
   `VmSize`/`VmRSS`, page faults y `mmap` de 2 MiB;
-- **procesos:** máster/worker FPM, `exit code 70`, `exit_group(70)`, respawn,
+- **procesos:** maestro/worker FPM, `exit code 70`, `exit_group(70)`, respawn,
   `pids.current/max` y el `502` de nginx;
 - **filesystem:** `/tmp` como `tmpfs` (64 MiB, `noexec`), inodo/modo de
   `sess_*`, rootfs `ro` y la diferencia entre escribir e interpretar un
-  fichero.
+  archivo.
 
 ```bash
 # Flujo completo: baseline -> sesión -> strace + OOM -> snapshot final
@@ -93,12 +93,15 @@ ls -la lab/os-activity/out/latest/
 Material:
 
 - [`os-activity/README.md`](os-activity/README.md) — guía del alumno
-- [`os-activity/worksheet.md`](os-activity/worksheet.md) — hoja para completar
+- [`os-activity/entrega/informe-php2shell.pdf`](os-activity/entrega/informe-php2shell.pdf) — **entregable único**
+- [`os-activity/entrega/LEEME.md`](os-activity/entrega/LEEME.md) — cómo regenerar el PDF
+- [`os-activity/worksheet.md`](os-activity/worksheet.md) — borrador opcional, no se entrega
 - `os-activity/collect-snapshot.sh`, `trace-worker.sh`, `run-activity.sh` (ayudantes para recolectar evidencias)
 
 > La actividad es **solo del acto 1**. No incluye RCE ni heap grooming; el
 > target de entrenamiento solo se usa, si está levantado, para comparar
-> montajes.
+> montajes. El estudiante entrega **un solo PDF** con el proceso completo y
+> las capturas; no entrega Markdown, hojas sueltas ni la carpeta `out/`.
 
 ---
 
@@ -109,7 +112,7 @@ Material:
    (target RCE) y `http://127.0.0.1:8081/` (parcheado, opcional).
 3. **Ventana y criterio de parada:** si el host pierde capacidad de respuesta,
    `Ctrl-C` y `docker compose down -v`.
-4. **Datos:** no uses ficheros reales; los scripts generan basura.
+4. **Datos:** no uses archivos reales; los scripts generan basura.
 5. **Guardas:** `rt.py` y `rce.py` rechazan hosts no loopback salvo
    `--authorized`.
 
@@ -273,7 +276,7 @@ docker compose logs --since=10m nginx | tail -n 40
 |---|---|
 | `Fatal ... in Unknown on line 0` | fallo en startup, antes del script |
 | `child ... exited with code 70` | worker muerto por fatal |
-| `child ... started` | respawn del máster |
+| `child ... started` | respawn del maestro |
 | `502` + `unexpected FastCGI record` | corte visible al cliente |
 | `signal 11 (SIGSEGV)` | corrupción de memoria |
 | `sess_*` con `upload_progress_*` | handler ejecutado sin la app |
@@ -283,7 +286,7 @@ docker compose logs --since=10m nginx | tail -n 40
 # ACTO 2 — RCE en el target de entrenamiento
 
 > Esta fase **no** explota CVE-2026-109618/619. El target es una app PHP
-> creada para el lab, con una vulnerabilidad deliberada de subida de ficheros.
+> creada para el lab, con una vulnerabilidad deliberada de subida de archivos.
 > El objetivo es practicar la fase final de un engagement: foothold, ejecución
 > de comandos, captura de flag y evidencia.
 
@@ -349,7 +352,7 @@ if (preg_match('/\.php$/i', $name)) {
 
 `lab/rce.py` genera `lab/reports/rce-<UTC>.json|md` con:
 
-- fichero subido y URL del webshell,
+- archivo subido y URL del webshell,
 - salida de `id`, `hostname` y `cat /flag.txt`,
 - comparación con `target/flag.txt`,
 - veredicto `flag_ok`.
@@ -408,7 +411,7 @@ docker compose -f docker-compose.modphp.yml down -v
 rm -f /tmp/sess_* /tmp/rt_shell.phtml 2>/dev/null || true
 ```
 
-El target usa `tmpfs` para `uploads/`, así que el webshell desaparece al bajar
+El target usa `tmpfs` para `uploads/`, así que el webshell desaparece al detener
 el stack. No persiste en el host.
 
 ---
@@ -456,7 +459,7 @@ contra un target de entrenamiento**, manteniendo separadas ambas cosas.
 
 | Síntoma | Causa probable | Acción |
 |---|---|---|
-| `probe_ok=False` y 502 en recon | `memory_limit` demasiado bajo | Subir a `8M` o bajar `--size` |
+| `probe_ok=False` y 502 en recon | `memory_limit` demasiado bajo | Subir a `8M` o reducir `--size` |
 | `session_file=False` | Handler deshabilitado o `save_path` distinto | Revisar `php -i`, `php/php.ini` |
 | `docker inspect` falla | Stack apagado o proyecto distinto | `docker compose ps`, `--compose-file` |
 | Impacto sin 502 | `memory_limit=-1` o worker con más RAM | Revisar configuración |

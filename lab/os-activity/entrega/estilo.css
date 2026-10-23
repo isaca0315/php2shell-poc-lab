@@ -1,0 +1,274 @@
+@page {
+  size: A4;
+  margin: 20mm 18mm 20mm 18mm;
+  @top-left {
+    content: "PHP2Shell desde dentro";
+    color: #64748b;
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 8pt;
+  }
+  @top-right {
+    content: "Actividad de sistemas operativos";
+    color: #64748b;
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 8pt;
+  }
+  @bottom-center {
+    content: "Página " counter(page) " de " counter(pages);
+    color: #64748b;
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 8pt;
+  }
+}
+
+@page :first {
+  @top-left { content: none; }
+  @top-right { content: none; }
+  @bottom-center { content: none; }
+}
+
+@page cover {
+  @top-left { content: none; }
+  @top-right { content: none; }
+  @bottom-center { content: none; }
+}
+
+#title-block-header {
+  display: none;
+}
+
+html {
+  font-family: "DejaVu Sans", "Liberation Sans", sans-serif;
+  font-size: 10pt;
+  line-height: 1.5;
+  color: #1e293b;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3 {
+  font-family: "DejaVu Sans", "Liberation Sans", sans-serif;
+  color: #0f172a;
+}
+
+h1 {
+  font-size: 31pt;
+  line-height: 1.08;
+  margin: 0 0 7mm 0;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 17pt;
+  margin: 0 0 4mm 0;
+  padding-bottom: 2.2mm;
+  border-bottom: 1.2pt solid #0ea5e9;
+  break-before: page;
+}
+
+h2:first-of-type {
+  break-before: auto;
+}
+
+h3 {
+  font-size: 12.5pt;
+  margin: 6mm 0 2mm 0;
+  color: #0c4a6e;
+}
+
+p {
+  margin: 0 0 3.2mm 0;
+  text-align: justify;
+  hyphens: auto;
+}
+
+a {
+  color: #0369a1;
+  text-decoration: none;
+}
+
+ul, ol {
+  margin: 0 0 3.5mm 0;
+  padding-left: 6mm;
+}
+
+li {
+  margin-bottom: 1.4mm;
+}
+
+code {
+  font-family: "DejaVu Sans Mono", monospace;
+  font-size: 8.7pt;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 0.4mm 1mm;
+  border-radius: 1.2mm;
+}
+
+pre {
+  font-family: "DejaVu Sans Mono", monospace;
+  font-size: 7.9pt;
+  line-height: 1.42;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-left: 1.4mm solid #0ea5e9;
+  border-radius: 1.5mm;
+  padding: 3.5mm 4mm;
+  margin: 3.5mm 0 4mm 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+  border-radius: 0;
+}
+
+blockquote {
+  margin: 4mm 0;
+  padding: 2.5mm 4mm;
+  border-left: 1.5mm solid #f59e0b;
+  background: #fffbeb;
+  color: #78350f;
+}
+
+blockquote p {
+  margin: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 3.5mm 0 5mm 0;
+  font-size: 8.7pt;
+  break-inside: avoid;
+}
+
+thead {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+th {
+  text-align: left;
+  padding: 2mm 2.2mm;
+  font-weight: 700;
+}
+
+td {
+  padding: 1.8mm 2.2mm;
+  border-bottom: 0.3pt solid #cbd5e1;
+  vertical-align: top;
+}
+
+tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+figure {
+  margin: 4mm 0 5mm 0;
+  break-inside: avoid;
+}
+
+figure img {
+  width: 100%;
+  border: 0.4pt solid #94a3b8;
+  border-radius: 1.5mm;
+}
+
+figcaption {
+  margin-top: 2mm;
+  color: #475569;
+  font-size: 8.4pt;
+  line-height: 1.35;
+  text-align: left;
+}
+
+hr {
+  border: none;
+  border-top: 0.5pt solid #cbd5e1;
+  margin: 6mm 0;
+}
+
+/* Portada */
+.cover {
+  page: cover;
+  box-sizing: border-box;
+  height: 235mm;
+  padding-top: 40mm;
+  break-after: page;
+}
+
+.eyebrow {
+  color: #0284c7;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 9pt;
+  font-weight: 700;
+  margin-bottom: 8mm;
+}
+
+.cover h1 {
+  font-size: 38pt;
+  max-width: 150mm;
+}
+
+.subtitle {
+  font-size: 15pt;
+  line-height: 1.3;
+  color: #334155;
+  max-width: 135mm;
+  margin-bottom: 10mm;
+}
+
+.rule {
+  width: 34mm;
+  height: 1.3mm;
+  background: #0ea5e9;
+  margin: 0 0 13mm 0;
+}
+
+.cover-meta {
+  width: 150mm;
+  margin: 0 0 12mm 0;
+  font-size: 9pt;
+  border-top: 0.6pt solid #cbd5e1;
+  border-bottom: 0.6pt solid #cbd5e1;
+}
+
+.cover-meta td {
+  border: none;
+  padding: 2.2mm 0;
+}
+
+.cover-meta td:first-child {
+  width: 40mm;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.cover-note {
+  max-width: 145mm;
+  color: #475569;
+  font-size: 10pt;
+  margin-bottom: 8mm;
+}
+
+.cover-quote {
+  color: #0369a1;
+  font-size: 12pt;
+  font-style: italic;
+  border-left: 1.2mm solid #38bdf8;
+  padding-left: 4mm;
+}
+
+/* Evitar que una tabla o figura quede partida de forma fea */
+h2 + p, h3 + p {
+  margin-top: 0;
+}

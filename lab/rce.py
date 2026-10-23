@@ -2,7 +2,7 @@
 """Fase final del lab: RCE contra la app PHP vulnerable por diseno.
 
 Cadena:
-  1. subida de un fichero .phtml (la app solo bloquea .php exacto)
+  1. subida de un archivo .phtml (la app solo bloquea .php exacto)
   2. ejecucion del webshell en /uploads/
   3. comandos de verificacion: id, hostname y cat /flag.txt
 
@@ -143,7 +143,7 @@ def write_report(report: dict[str, Any]) -> tuple[Path, Path]:
 
 ## 1. Subida del webshell
 
-- Fichero: `{up["filename"]}`
+- Archivo: `{up["filename"]}`
 - HTTP: `{up["status"]}`
 - Subida correcta: `{up["ok"]}`
 

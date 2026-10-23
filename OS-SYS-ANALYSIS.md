@@ -19,7 +19,7 @@
 
 ### 1.3 Procesos, señales y FPM
 - **Modelo prefork** (Apache mod_php) vs **separación** (nginx + PHP-FPM).
-- **PHP-FPM**: proceso **máster** gestiona un **pool** con hijos `www-data`. Si un hijo muere por fatal/error interno (código 70) o señal, el máster crea uno nuevo (patrón de tolerancia a fallos).
+- **PHP-FPM**: proceso **maestro** gestiona un **pool** con hijos `www-data`. Si un hijo muere por fatal/error interno (código 70) o señal, el maestro crea uno nuevo (patrón de tolerancia a fallos).
 - **FastCGI**: protocolo binario sobre socket (UNIX o TCP). Un corte brusco del lado FPM puede generar `FastCGI record` inesperado en nginx → `502`.
 - **Señales**: `SIGSEGV` (11) indica acceso inválido a memoria; `SIGABRT` por `assert`; `SIGKILL` (9) por OOM killer.
 
@@ -30,7 +30,7 @@
 | `open`, `read`, `write` | sesión, archivos temp | `session.save_path=/tmp`, escritura de `sess_*` |
 | `accept`, `recvfrom`, `sendto` | FastCGI/HTTP | tráfico hacia el worker |
 | `brk` | menos común | evolución del allocator |
-| `clone/fork` | FPM máster/niños | ciclo de vida |
+| `clone/fork` | FPM maestro/niños | ciclo de vida |
 | `exit_group`, `_exit` | salida del worker | códigos 70 / señal |
 
 ## 2. Instrumentación disponible
@@ -40,7 +40,7 @@ En el host hay: `strace`, `pidstat`, `perf`, `bpftrace`, `jq`, `timeout`. Docker
 ### 2.1 Aislamiento del proceso objetivo
 ```bash
 docker top php2shell-lab-php-1 -eo pid,ppid,user,args
-# máster: 54487 (root), worker: 54661 (www-data)
+# maestro: 54487 (root), worker: 54661 (www-data)
 ```
 
 Para tracer el **worker** concreto (cambia tras reinicio):

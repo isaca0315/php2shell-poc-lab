@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['avatar'])) {
             $ok = true;
             $msg = 'Avatar subido: uploads/' . htmlspecialchars($name, ENT_QUOTES);
         } else {
-            $msg = 'No se pudo guardar el fichero.';
+            $msg = 'No se pudo guardar el archivo.';
         }
     }
 }
@@ -56,7 +56,7 @@ $files = array_values(array_diff(scandir(__DIR__ . '/uploads') ?: [], ['.', '..'
     <button type="submit">Subir</button>
   </form>
 
-  <h2>Ficheros subidos</h2>
+  <h2>Archivos subidos</h2>
   <ul>
     <?php foreach ($files as $f): ?>
       <li><a href="uploads/<?= htmlspecialchars($f, ENT_QUOTES) ?>"><?= htmlspecialchars($f, ENT_QUOTES) ?></a></li>

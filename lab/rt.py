@@ -181,8 +181,8 @@ def build_body(
 
     - `progress`: valor de PHP_SESSION_UPLOAD_PROGRESS.
     - `size > 0`: agrega un segundo valor de progreso de `size` bytes (OOM).
-    - `parts > 0`: agrega `parts` ficheros pequenos.
-    - `name_len > 0`: usa nombres de campo/fichero de esa longitud.
+    - `parts > 0`: agrega `parts` archivos pequenos.
+    - `name_len > 0`: usa nombres de campo/archivo de esa longitud.
     """
     chunks: list[bytes] = [
         text_part("PHPSESSID", sid.encode()),

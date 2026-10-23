@@ -16,7 +16,7 @@ echo "== 3) Logs nginx (502 / upstream cerrado) =="
 docker compose logs --since=10m nginx 2>&1 | tail -n 40
 
 echo
-echo "== 4) Ficheros de sesión dejados por el handler =="
+echo "== 4) Archivos de sesión dejados por el handler =="
 docker compose exec -T php sh -c 'ls -l /tmp/sess_* 2>/dev/null | tail; for f in /tmp/sess_*; do [ -f "$f" ] && echo "--- $f" && head -c 400 "$f" && echo; done' || true
 
 echo

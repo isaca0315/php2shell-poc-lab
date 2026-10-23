@@ -8,7 +8,7 @@
 >
 > La regla de este cuaderno es simple: **si no está en la evidencia, es una
 > opinión**. Cada afirmación que escribas debería poder señalarse con un
-> comando, una línea de log o un fichero de `/proc`.
+> comando, una línea de log o un archivo de `/proc`.
 
 Este material nace de una idea sencilla: el fallo de
 `session.upload_progress` se entiende mucho mejor cuando lo miras desde tres
@@ -19,6 +19,10 @@ al proceso. Las tres cosas son ciertas y, sin embargo, parecen contradecirse.
 Aquí no hay exploit de RCE ni heap grooming. Esta es una actividad de
 observación: usamos el trigger benigno del acto 1 y aprendemos a leer lo que
 el sistema operativo deja detrás.
+
+> **Entregable:** un único PDF, `lab/os-activity/entrega/informe-php2shell.pdf`.
+> Debe incluir el proceso completo y las capturas de la evidencia. El archivo
+> `worksheet.md` es solo un borrador y no se entrega.
 
 ---
 
@@ -121,7 +125,7 @@ El snapshot deja, entre otros:
 
 ```text
 meta.txt                 # contenedor, imagen, cgroup, límites
-docker-top.txt           # máster y worker
+docker-top.txt           # maestro y worker
 worker-<pid>-proc.txt    # /proc del worker (status, stat, limits, ...)
 cgroup-memory.current.txt
 cgroup-memory.peak.txt
@@ -189,7 +193,7 @@ exit_group(70) = ?
 | `memory_limit` | `php -i` | Contador de **Zend MM**, no memoria real del proceso |
 | `VmSize` | `/proc/<pid>/status` | Espacio virtual reservado; puede ser enorme sin estar usado |
 | `VmRSS` | `/proc/<pid>/status` | Páginas físicas residentes |
-| `RssAnon` / `RssFile` | `/proc/<pid>/status` | RSS anónimo / mapeado de ficheros |
+| `RssAnon` / `RssFile` | `/proc/<pid>/status` | RSS anónimo / mapeado de archivos |
 | `minflt` / `majflt` | `/proc/<pid>/stat`, `pidstat -r` | Page faults menores / mayores |
 | `memory.current` | cgroup v2 | Memoria cargada al cgroup **ahora** |
 | `memory.peak` | cgroup v2 | Pico histórico del cgroup |
@@ -246,9 +250,11 @@ docker exec php2shell-lab-php-1 sh -c '
 
 Fíjate en tres cosas:
 
-- el **máster** corre como `root` y es el PID 1 del contenedor;
-- el **worker** corre como `www-data` y su `PPid` es el máster;
+- el **maestro** corre como `root` y es el PID 1 del contenedor;
+- el **worker** corre como `www-data` y su `PPid` es el maestro;
 - `php/www.conf` usa `pm=static` y `pm.max_children=1`: un solo worker.
+  Dentro del contenedor se monta como `zz-php2shell-lab.conf`, que es la
+  configuración efectiva del pool.
 
 ### 3.2 El momento en que cambia el reparto
 
@@ -288,7 +294,7 @@ NOTICE: [pool www] child 115 started
 
 - `exit code 70` es un **estado de salida**, no una señal. En la traza lo ves
   como `exit_group(70)`.
-- El máster no muere: es el supervisor. El worker es el que ejecuta la
+- El maestro no muere: es el supervisor. El worker es el que ejecuta la
   petición y el que sufre el fatal.
 - nginx no devuelve `500` porque PHP no llegó a producir una respuesta HTTP
   válida. Devuelve `502` porque su upstream FastCGI se rompió a mitad.
@@ -297,7 +303,7 @@ NOTICE: [pool www] child 115 started
 
 Preguntas:
 
-1. ¿Qué proceso muere: el máster o el worker? ¿Por qué?
+1. ¿Qué proceso muere: el maestro o el worker? ¿Por qué?
 2. ¿Qué significa `exit code 70`? ¿Es una señal? ¿Qué syscall lo produce?
 3. ¿Cómo se vería un `SIGKILL` en los logs y en `memory.events`?
 4. ¿Por qué nginx responde `502` y no un `500` de PHP?
@@ -357,7 +363,7 @@ python3 lab/rt.py validate \
 docker exec php2shell-lab-php-1 sh -c '
   for f in /tmp/sess_*; do
     [ -e "$f" ] || continue
-    stat -c "inodo=%i modo=%a dueño=%U:%G tamaño=%s %n" "$f"
+    stat -c "inodo=%i modo=%a propietario=%U:%G tamaño=%s %n" "$f"
   done
 '
 ```
@@ -365,7 +371,7 @@ docker exec php2shell-lab-php-1 sh -c '
 Huella observada:
 
 ```text
-inodo=2 modo=600 dueño=www-data:www-data tamaño=362 /tmp/sess_...
+inodo=2 modo=600 propietario=www-data:www-data tamaño=362 /tmp/sess_...
 ```
 
 ### 4.3 La prueba del inodo
@@ -381,14 +387,14 @@ docker exec php2shell-lab-php-1 sh -c '
 ```
 
 No te quedes con el número: pregúntate qué significa que se repita. Un inodo
-no es un nombre, y un nombre no es un fichero.
+no es un nombre, y un nombre no es un archivo.
 
 ### 4.4 La trampa de `noexec`
 
 `noexec` impide ejecutar binarios o scripts con `execve` desde ese montaje.
-No impide escribir, leer, incluir o interpretar un fichero. Un webshell PHP
+No impide escribir, leer, incluir o interpretar un archivo. Un webshell PHP
 en un directorio `noexec` puede funcionar si Apache/mod_php lo lee y lo
-compila como PHP; el `execve` es del servidor web, no del fichero.
+compila como PHP; el `execve` es del servidor web, no del archivo.
 
 Si el target de entrenamiento está levantado, compara `/tmp` con
 `/var/www/html/uploads`: cambia el tamaño y el contenido, pero no la opción
@@ -401,8 +407,8 @@ Preguntas:
 2. ¿Qué significa el modo `600`? ¿Quién puede leerlo y escribirlo?
 3. ¿Qué es un inodo? ¿Por qué puede ser un número bajo en `tmpfs`?
 4. ¿Qué ocurre con la sesión tras `docker compose down -v`?
-5. ¿Qué diferencia hay entre borrar un fichero y truncarlo?
-6. ¿Qué implica `noexec` para un atacante que puede escribir un fichero?
+5. ¿Qué diferencia hay entre borrar un archivo y truncarlo?
+6. ¿Qué implica `noexec` para un atacante que puede escribir un archivo?
 7. ¿Qué diferencia hay entre `read_only: true` y un `tmpfs`?
 
 ---
@@ -419,11 +425,11 @@ Completa esta línea temporal con evidencia real:
 | t3 | Worker termina | proceso | `exit_group(70)` |
 | t4 | FPM registra la salida y crea otro worker | proceso | `child ... exited with code 70` / `child ... started` |
 | t5 | nginx ve el corte FastCGI | red / proceso | `unexpected FastCGI record` / `502` |
-| t6 | Fichero `sess_*` en `/tmp` | filesystem | inodo, modo 600, `www-data` |
+| t6 | Archivo `sess_*` en `/tmp` | filesystem | inodo, modo 600, `www-data` |
 
 La pregunta final no es “¿qué pasó?”, sino **¿cómo encajan las tres capas
 sin que ninguna mienta?** Un límite de usuario de 4 MiB termina en un `502`,
-un worker nuevo y un fichero en `tmpfs`. El kernel no mató nada. Eso es lo
+un worker nuevo y un archivo en `tmpfs`. El kernel no mató nada. Eso es lo
 que hay que explicar.
 
 ---
@@ -435,6 +441,7 @@ que hay que explicar.
 | `collect-snapshot.sh` | Snapshot de `/proc`, cgroup, montajes, sesiones y logs |
 | `trace-worker.sh` | `strace` del worker con un contenedor auxiliar y `SYS_PTRACE` |
 | `run-activity.sh` | Flujo completo y resumen automático |
+| `entrega/generar-pdf.sh` | Convierte `entrega/informe.md` en el PDF de entrega |
 
 ```bash
 # Flujo completo
@@ -490,24 +497,75 @@ Los scripts no escriben fuera del repo y solo hablan con `127.0.0.1`.
 
 ---
 
-## 7. Entregable
+## 7. Entregable: un único PDF
 
-1. `worksheet.md` completado, con valores y fuentes.
-2. Directorio de evidencias `lab/os-activity/out/<timestamp>-activity/`.
-3. Informe de una página:
-   - línea temporal del fallo;
-   - tres conclusiones de memoria, tres de procesos y tres de filesystem;
-   - la métrica exacta que demuestra que **no** hubo OOM del kernel.
-4. Copia de los comandos que usaste, tal como los ejecutaste.
+El entregable es **un solo PDF**, no una carpeta de archivos ni una hoja
+separada. Debe incluir todo el proceso y las capturas que lo demuestran:
+
+```text
+lab/os-activity/entrega/informe-php2shell.pdf
+```
+
+El PDF tiene que contar la historia completa, en este orden:
+
+1. **Portada y alcance:** objetivo, URL loopback, imagen, límites y fecha.
+2. **Proceso paso a paso:** comandos ejecutados y qué se hizo en cada paso.
+3. **Memoria:** baseline, snapshot final, `memory.current`, `memory.peak`,
+   `memory.max`, `memory.events`, `VmRSS` y `VmSize`.
+4. **Traza:** el `read` del multipart, el `mmap`, el fatal y `exit_group(70)`.
+5. **Procesos:** maestro/worker antes y después, `exit code 70` y el nuevo
+   worker.
+6. **Red:** el `502` de nginx y el `unexpected FastCGI record`.
+7. **Sistemas de archivos:** montajes, `tmpfs`, rootfs de solo lectura,
+   `sess_*`, inodo, modo y propietario.
+8. **Línea de tiempo:** los eventos de las tres capas en orden.
+9. **Conclusiones:** tres de memoria, tres de procesos y tres de archivos.
+10. **Comandos reproducibles:** tal como se ejecutaron.
+
+### Capturas mínimas
+
+El PDF debe traer estas seis capturas, cada una con un pie que explique qué
+demuestra:
+
+| Captura | Qué debe mostrar |
+|---|---|
+| 1 | `docker compose ps`, `docker top` y límites del contenedor |
+| 2 | Memoria baseline/después y `memory.events` en cero |
+| 3 | `mmap`, fatal de PHP y `exit_group(70)` |
+| 4 | Muerte del worker, nuevo worker y `502` de nginx |
+| 5 | `findmnt`, rootfs de solo lectura y `stat` de `sess_*` |
+| 6 | Gráfica o tabla de la línea de tiempo de memoria |
+
+No se entrega `worksheet.md`: ese archivo es solo un borrador para tomar
+notas. Tampoco se entrega la carpeta `out/`; las capturas y los datos van
+dentro del PDF.
+
+### Cómo generar el PDF
+
+La carpeta [`entrega/`](entrega/) trae un informe base y un generador:
+
+```bash
+cd lab/os-activity/entrega
+
+# Requisitos: pandoc y weasyprint
+./generar-pdf.sh
+
+# El resultado queda en:
+ls -lh informe-php2shell.pdf
+```
+
+Si repites el laboratorio, actualiza los números y reemplaza las capturas
+manteniendo los nombres; después vuelve a ejecutar `./generar-pdf.sh`. Las
+instrucciones completas están en [`entrega/LEEME.md`](entrega/LEEME.md).
 
 ### Rúbrica
 
 | Criterio | Peso | Qué se valora |
 |---|---:|---|
-| Evidencia | 40 % | Snapshots, traza, logs y comandos reproducibles |
+| Evidencia | 40 % | Capturas, comandos reproducibles y datos reales |
 | Análisis | 30 % | Interpretación correcta de memoria, procesos y FS |
-| Correlación | 20 % | Línea temporal coherente entre las tres capas |
-| Comunicación | 10 % | Informe claro, sin afirmaciones sin evidencia |
+| Correlación | 20 % | Línea de tiempo coherente entre las tres capas |
+| Comunicación | 10 % | PDF claro, ordenado y sin afirmaciones sin evidencia |
 
 Mínimo para aprobar: identificar que el fallo es **PHP OOM** (no kernel OOM),
 explicar el `exit code 70` y localizar la sesión en `tmpfs`.
@@ -522,7 +580,7 @@ rm -rf lab/os-activity/out
 ```
 
 El `tmpfs` desaparece con el contenedor; no queda sesión en el host. Si
-levantaste el target de entrenamiento, bájalo también:
+iniciaste el target de entrenamiento, detenlo también:
 
 ```bash
 docker compose -f docker-compose.modphp.yml down -v   # solo si lo usaste
@@ -535,7 +593,7 @@ docker compose -f docker-compose.modphp.yml down -v   # solo si lo usaste
 - `proc(5)`: `/proc/<pid>/status`, `stat`, `limits`, `cgroup`.
 - cgroup v2: `memory.current`, `memory.peak`, `memory.events`, `pids.current`.
 - `mmap(2)`, `brk(2)`: memoria virtual y heap.
-- `tmpfs(5)`: ficheros en memoria, tamaño e inodos.
+- `tmpfs(5)`: archivos en memoria, tamaño e inodos.
 - `strace(1)`: traza de syscalls.
 - PHP-FPM: `pm`, `pm.max_children`, `catch_workers_output`, exit codes.
 - PHP: `session.upload_progress`, `memory_limit`, `memory_get_peak_usage`.

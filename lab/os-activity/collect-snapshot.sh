@@ -2,11 +2,11 @@
 # Recolector de evidencias OS del lab PHP2Shell.
 #
 # Captura, sin modificar el estado del laboratorio:
-#   - procesos FPM (máster/hijos) y sus PIDs dentro/fuera del contenedor
+#   - procesos FPM (maestro/hijos) y sus PIDs dentro/fuera del contenedor
 #   - /proc/<pid>/{status,stat,limits,cgroup,wchan,...}
 #   - cgroup v2: memory.current/peak/max/events y pids.current/max
 #   - docker stats y pidstat (si está instalado)
-#   - montajes, tmpfs, inodos, permisos y ficheros de sesión
+#   - montajes, tmpfs, inodos, permisos y archivos de sesión
 #   - logs de PHP-FPM/nginx y evidencia de OOM del kernel
 #
 # Uso:
@@ -213,7 +213,7 @@ fi
     'type=%T block_size=%s blocks=%b free_blocks=%f files=%c free_files=%d' \
     /tmp 2>&1 || true
   echo
-  echo "## ficheros de sesión (inodo, modo, dueño, tamaño)"
+  echo "## archivos de sesión (inodo, modo, propietario, tamaño)"
   docker exec "$PHP_CONTAINER" sh -c '
     for f in /tmp/sess_*; do
       [ -e "$f" ] || continue
@@ -245,7 +245,7 @@ fi
     fi
   ' 2>&1 || true
   echo
-  echo "## descriptores del PID 1 (máster FPM)"
+  echo "## descriptores del PID 1 (maestro FPM)"
   docker exec "$PHP_CONTAINER" sh -c 'ls /proc/1/fd 2>/dev/null | wc -l' 2>&1 || true
   echo
   echo "## montajes del contenedor (filtrado)"
@@ -309,7 +309,7 @@ proc_fields() {
   echo "- Fecha UTC: $TS"
   echo "- Contenedor: $PHP_CONTAINER ($IMAGE)"
   echo "- cgroup: ${CGROUP:-no encontrado}"
-  echo "- Máster FPM (host): ${MASTER:-n/a}"
+  echo "- Maestro FPM (host): ${MASTER:-n/a}"
   echo "- Workers FPM (host): ${WORKERS:-n/a}"
   echo "- Workers FPM (dentro del contenedor): ${INSIDE_WORKERS:-n/a}"
   echo
@@ -337,12 +337,12 @@ proc_fields() {
   echo "- /tmp: $(grep -m1 '^/tmp ' "$OUT/container-fs.txt" 2>/dev/null || echo 'ver container-fs.txt')"
   echo "- /var/www/html: $(grep -m1 '^/var/www/html ' "$OUT/container-fs.txt" 2>/dev/null || echo 'ver container-fs.txt')"
   echo "- Escritura en rootfs: $(grep -m1 -E 'WRITE_OK|WRITE_FAILED' "$OUT/container-fs.txt" 2>/dev/null || echo 'ver container-fs.txt')"
-  echo "- Ficheros de sesión:"
+  echo "- Archivos de sesión:"
   docker exec "$PHP_CONTAINER" sh -c '
     found=0
     for f in /tmp/sess_*; do
       [ -e "$f" ] || continue
-      stat -c "    inode=%i modo=%a dueño=%U:%G tamaño=%s %n" "$f"
+      stat -c "    inode=%i modo=%a propietario=%U:%G tamaño=%s %n" "$f"
       found=1
     done
     [ "$found" -eq 1 ] || echo "    (ninguno)"

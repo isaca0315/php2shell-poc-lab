@@ -37,7 +37,7 @@ Aislamiento aplicado:
 - `cap_drop: ALL` y solo las capabilities mínimas para FPM/nginx.
 - `no-new-privileges`, `mem_limit` y `pids_limit`.
 
-## 2. Levantarlo
+## 2. Iniciarlo
 
 ```bash
 cd /home/kali/php2shell-poc-lab
@@ -69,7 +69,7 @@ python3 trigger.py --url http://127.0.0.1:8080/ --mode progress
 # Modo B: muchas partes pequeñas; la sesión se re-codifica en cada tick.
 python3 trigger.py --url http://127.0.0.1:8080/ --mode parts --parts 4000
 
-# Modo C: pocas partes con nombres de campo/fichero de 1 KiB.
+# Modo C: pocas partes con nombres de campo/archivo de 1 KiB.
 python3 trigger.py --url http://127.0.0.1:8080/ --mode names \
   --parts 1000 --name-len 1024
 ```
@@ -103,7 +103,7 @@ response header from upstream ...
 ```
 
 Fíjate en `in Unknown on line 0`: el fatal ocurre en el *request startup*, no
-en `index.php`. El hijo termina y el máster lo reemplaza. No hay OOM del
+en `index.php`. El hijo termina y el maestro lo reemplaza. No hay OOM del
 kernel.
 
 ### Evidencia de que el handler procesó el progreso
@@ -116,7 +116,7 @@ docker compose exec -T php sh -c \
   'ls -l /tmp/sess_*; head -c 260 /tmp/sess_*'
 ```
 
-Se observa un fichero `sess_<sid>` con una clave como
+Se observa un archivo `sess_<sid>` con una clave como
 `upload_progress_k|a:5:{...s:5:"files";a:...}`. Eso demuestra que el handler
 abrió la sesión, insertó el array de progreso y la re-serializó **sin que la
 aplicación llamara a `session_start()`**.
@@ -141,7 +141,7 @@ y el tamaño exactos.
 
 1. nginx acepta el `POST` y lo reenvía por FastCGI a `php:9000`. Si el cuerpo
    supera el buffer, nginx lo vuelca a `/var/cache/nginx/client_temp`.
-2. El máster de FPM entrega la conexión a un worker libre. El worker lee los
+2. El maestro de FPM entrega la conexión a un worker libre. El worker lee los
    parámetros FastCGI y el cuerpo.
 3. Antes de compilar/ejecutar el script, PHP hace el *request startup*:
    `php_request_startup()` → parseo automático del cuerpo → `main/rfc1867.c`.
@@ -153,7 +153,7 @@ y el tamaño exactos.
    - la deserializa;
    - inserta/actualiza `$_SESSION[<prefix><valor>]` con `start_time`,
      `content_length`, `bytes_processed`, `done` y un array `files` con una
-     entrada por parte (nombre de campo, nombre de fichero, `tmp_name`,
+     entrada por parte (nombre de campo, nombre de archivo, `tmp_name`,
      `error`, bytes...);
    - vuelve a serializar **toda** la sesión y la escribe.
 6. El coste lo controla el atacante: número de partes, longitud de nombres,
@@ -182,8 +182,8 @@ y el tamaño exactos.
   antes de reinicializarse en el siguiente request. En FPM se confirma RCE
   cuando la aplicación realiza después una operación adecuada.
 
-Matiz importante para vuestro laboratorio: el aviso de PHP indica que, si el
-*request startup* falla, **FPM termina el hijo** y el máster lo reemplaza;
+Matiz importante para el laboratorio: el aviso de PHP indica que, si el
+*request startup* falla, **FPM termina el hijo** y el maestro lo reemplaza;
 por eso no se consume el estado inválido como en `mod_php` (donde el shutdown
 sí se ejecuta incondicionalmente). En FPM el síntoma observable es
 *caída/reemplazo de worker* y `502`; el RCE completo de 618 está demostrado
@@ -214,7 +214,7 @@ docker compose logs --since=10m php
 # 2) nginx: 502 y "unexpected FastCGI record"
 docker compose logs --since=10m nginx
 
-# 3) Ficheros de sesión que dejó el handler (cleanup=Off en el lab)
+# 3) Archivos de sesión que dejó el handler (cleanup=Off en el lab)
 docker compose exec -T php sh -c \
   'ls -l /tmp/sess_*; for f in /tmp/sess_*; do echo "--- $f"; head -c 300 "$f"; done'
 
@@ -313,11 +313,14 @@ sistemas de archivos** con evidencia real (`/proc`, cgroup v2, `strace`,
 ```
 
 - Guía: [`lab/os-activity/README.md`](lab/os-activity/README.md)
-- Hoja de trabajo: [`lab/os-activity/worksheet.md`](lab/os-activity/worksheet.md)
+- Entregable único: [`lab/os-activity/entrega/informe-php2shell.pdf`](lab/os-activity/entrega/informe-php2shell.pdf)
+- Cómo regenerar el PDF: [`lab/os-activity/entrega/LEEME.md`](lab/os-activity/entrega/LEEME.md)
+- Borrador opcional (no se entrega): [`lab/os-activity/worksheet.md`](lab/os-activity/worksheet.md)
 
 Reproduce el OOM del acto 1 y explica por qué es un fallo de **memoria de
 usuario** (Zend MM) y no un OOM del kernel, cómo FPM repone el worker y qué
-papel juega el `tmpfs` de `/tmp`.
+papel juega el `tmpfs` de `/tmp`. El estudiante entrega un solo PDF con todo
+el proceso y las capturas de la evidencia.
 
 ## 9. Parar y limpiar
 
@@ -328,5 +331,5 @@ docker compose -f docker-compose.modphp.yml down -v
 rm -f /tmp/sess_* 2>/dev/null || true
 ```
 
-Los ficheros de sesión del laboratorio viven en el `tmpfs` del contenedor, así
-que desaparecen al bajarlo; el `rm` es solo por si se copiaron fuera.
+Los archivos de sesión del laboratorio viven en el `tmpfs` del contenedor, así
+que desaparecen al detenerlo; el `rm` es solo por si se copiaron fuera.

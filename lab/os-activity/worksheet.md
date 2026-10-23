@@ -1,10 +1,13 @@
-# Cuaderno de campo — PHP2Shell desde dentro
+# Cuaderno de campo (borrador) — PHP2Shell desde dentro
 
 **Nombre:** __________________________
 **Fecha:** ___________________________
 **Entorno:** `php:8.5.11-fpm` + nginx + cgroup v2
 **Directorio de evidencias:** `lab/os-activity/out/<timestamp>-activity/`
 
+> **Este cuaderno no se entrega.** Es un borrador para ordenar las ideas.
+> El único entregable es `lab/os-activity/entrega/informe-php2shell.pdf`.
+>
 > Rellena esto como si se lo explicaras a alguien que no estuvo delante.
 > Cada fila necesita una fuente: un comando, una ruta o una línea de log.
 > Si no la tienes, la fila no cuenta. Los valores de ejemplo son solo eso:
@@ -101,12 +104,12 @@ __________________________________________________________________________
 
 | Dato | Antes | Después |
 |---|---|---|
-| PID del máster (host) | | |
+| PID del maestro (host) | | |
 | PID del worker (host) | | |
-| PID del máster (contenedor) | | |
+| PID del maestro (contenedor) | | |
 | PID del worker (contenedor) | | |
 | PPID del worker | | |
-| Usuario del máster | | |
+| Usuario del maestro | | |
 | Usuario del worker | | |
 | Estado del worker | | |
 | Nº de hilos | | |
@@ -139,7 +142,7 @@ __________________________________________________________________________
 
    ______________________________________________________________________
 
-5. ¿Qué configuración de FPM permite que haya un solo worker y que el máster
+5. ¿Qué configuración de FPM permite que haya un solo worker y que el maestro
    lo reemplace?
 
    ______________________________________________________________________
@@ -165,14 +168,14 @@ __________________________________________________________________________
 | `/var/www/html` | | | | sí / no |
 | `/var/www/html/uploads` (si aplica) | | | | sí / no |
 
-### 3.2 El fichero de sesión
+### 3.2 El archivo de sesión
 
 | Dato | Valor |
 |---|---|
 | Ruta | |
 | Inodo | |
 | Modo | |
-| Dueño:Grupo | |
+| Propietario:Grupo | |
 | Tamaño | |
 | ¿Sobrevive a `docker compose down`? | |
 
@@ -198,12 +201,12 @@ __________________________________________________________________________
    ______________________________________________________________________
 
 4. ¿Qué implica `noexec` en `/tmp` para un atacante que puede escribir un
-   fichero? ¿Y si el montaje fuera `exec`?
+   archivo? ¿Y si el montaje fuera `exec`?
 
    ______________________________________________________________________
 
 5. En la prueba de inodo, ¿se reutilizó? ¿Qué implica para la caché y para
-   ficheros borrados que siguen abiertos?
+   archivos borrados que siguen abiertos?
 
    ______________________________________________________________________
 
@@ -265,13 +268,14 @@ __________________________________________________________________________
 
 ---
 
-## 6. Checklist de entrega
+## 6. Checklist del PDF (no de este borrador)
 
-- [ ] Ficha de sesión completa.
-- [ ] Tablas de memoria, procesos y filesystem con valores reales.
+- [ ] Portada con objetivo, URL, entorno y fecha.
+- [ ] Proceso paso a paso con comandos.
+- [ ] Tablas de memoria, procesos y archivos con valores reales.
+- [ ] Seis capturas, cada una con su explicación.
 - [ ] Cada afirmación tiene una fuente (comando, ruta o log).
-- [ ] Traza o logs citados.
-- [ ] Narrativa de correlación en 5–8 líneas.
-- [ ] Informe de una página.
+- [ ] Línea de tiempo de las tres capas.
+- [ ] Tres conclusiones de memoria, tres de procesos y tres de archivos.
 - [ ] Comandos reproducibles incluidos.
-- [ ] Evidencias en `lab/os-activity/out/<timestamp>-activity/`.
+- [ ] PDF final en `lab/os-activity/entrega/informe-php2shell.pdf`.

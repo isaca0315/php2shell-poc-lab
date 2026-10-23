@@ -66,7 +66,7 @@ def build_body(args: argparse.Namespace, sid: str) -> bytes:
             chunks.append(file_part(f"u{i}", f"f{i}.txt", b"xxxxxxxx"))
 
     elif args.mode == "names":
-        # Menos partes pero con nombres de campo/fichero muy largos: el
+        # Menos partes pero con nombres de campo/archivo muy largos: el
         # handler copia ambos en el array de progreso.
         for i in range(args.parts):
             name = (f"u{i}").ljust(args.name_len, "B")

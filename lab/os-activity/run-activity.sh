@@ -3,7 +3,7 @@
 #
 # Hace esto, en este orden:
 #   1. snapshot "baseline" (procesos, memoria, cgroup, filesystem)
-#   2. valida el handler de sesión (crea un fichero sess_* en /tmp)
+#   2. valida el handler de sesión (crea un archivo sess_* en /tmp)
 #   3. traza el worker con strace y dispara el OOM controlado
 #   4. snapshot "after" y resumen
 #
@@ -192,7 +192,7 @@ echo "== [5/6] Resumen =="
     "$OUT/after/summary.txt" 2>/dev/null || true
   echo
   echo "## Procesos"
-  grep -E 'Máster FPM|Workers FPM|PID [0-9]+:|exited with code|child [0-9]+ started' \
+  grep -E 'Maestro FPM|Workers FPM|PID [0-9]+:|exited with code|child [0-9]+ started' \
     "$OUT/after/summary.txt" 2>/dev/null || true
   echo
   echo "## Sistemas de archivos"
@@ -210,7 +210,8 @@ echo "== [5/6] Resumen =="
   echo "Ver \`$TIMELINE\` (muestras cada 200 ms)."
   echo
   echo "## Siguiente paso"
-  echo "Completa \`lab/os-activity/worksheet.md\` con estas evidencias."
+  echo "Usa estas evidencias para completar el PDF de \`lab/os-activity/entrega/\`."
+  echo "El cuaderno \`worksheet.md\` es solo un borrador y no se entrega."
 } >"$OUT/summary.md"
 
 sed -n '1,160p' "$OUT/summary.md"

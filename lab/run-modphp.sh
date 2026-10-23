@@ -67,5 +67,5 @@ echo "    solo demuestra el fallo de memoria y el comportamiento del SAPI real."
 if [ "$CLEANUP" -eq 1 ]; then
   docker compose -f "$COMPOSE" down -v
 else
-  echo "[i] Stack conservado. Usa --cleanup para bajarlo."
+  echo "[i] Stack conservado. Usa --cleanup para detenerlo."
 fi
