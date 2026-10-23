@@ -1,0 +1,33 @@
+title: PHP-FPM Worker Exit 70 Followed by Respawn
+id: a7c2e4d9-1b3f-4e58-9a20-6f7d5c4b3a21
+status: experimental
+description: >
+  Detecta la muerte de un worker PHP-FPM con codigo 70 (fatal de PHP) y su
+  reemplazo inmediato por el master. Es la senal de impacto observable del
+  PoC PHP2Shell cuando el fallo ocurre en request startup.
+references:
+  - https://www.php.net/manual/en/install.fpm.configuration.php
+author: php2shell-lab
+date: 2026/10/23
+logsource:
+  product: linux
+  service: php-fpm
+detection:
+  exit_event:
+    message|contains|all:
+      - '[pool'
+      - 'exited with code 70'
+  respawn_event:
+    message|contains|all:
+      - '[pool'
+      - 'child'
+      - 'started'
+  condition: exit_event and respawn_event
+  timeframe: 60s
+fields:
+  - message
+falsepositives:
+  - Fatals legitimos de la aplicacion (memory_limit, excepciones no capturadas)
+level: medium
+tags:
+  - attack.t1499

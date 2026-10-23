@@ -1,0 +1,48 @@
+{
+  "name": "php2shell-redteam-lab",
+  "version": 2,
+  "description": "Reto de red team en dos actos: (1) demostrar el impacto del fallo session.upload_progress (DoS + session write) y (2) obtener RCE contra una app PHP vulnerable por diseno incluida en el lab.",
+  "scope": {
+    "default_url": "http://127.0.0.1:8080/",
+    "target_url": "http://127.0.0.1:8082/",
+    "allowed_hosts": ["127.0.0.0/8", "::1"],
+    "authorization_required_for_non_loopback": true
+  },
+  "threshold": 100,
+  "flag": {
+    "format": "FLAG{php2shell_<sha256:16>}",
+    "note": "Se genera al completar los cinco objetivos y se escribe en lab/reports/FLAG.txt"
+  },
+  "objectives": [
+    {
+      "id": "recon",
+      "points": 15,
+      "title": "Reconocimiento del stack",
+      "description": "Identificar PHP-FPM/nginx, version afectada y handler session.upload_progress activo con un probe benigno."
+    },
+    {
+      "id": "validate",
+      "points": 20,
+      "title": "Validacion del handler",
+      "description": "Demostrar que el handler escribe una sesion con ID controlado por el cliente sin que la app llame a session_start()."
+    },
+    {
+      "id": "impact",
+      "points": 25,
+      "title": "Denegacion de servicio",
+      "description": "Agotar memory_limit durante el request startup y observar 502/reset con caida o reemplazo del worker FPM."
+    },
+    {
+      "id": "evidence",
+      "points": 15,
+      "title": "Evidencia correlacionada",
+      "description": "Correlacionar el fatal in Unknown on line 0, exited with code 70 y el 502/FastCGI en los logs."
+    },
+    {
+      "id": "rce",
+      "points": 25,
+      "title": "RCE en target de entrenamiento",
+      "description": "Subir un webshell .phtml a la app vulnerable por diseno, ejecutar comandos y leer /flag.txt. No es un exploit del CVE de memoria."
+    }
+  ]
+}

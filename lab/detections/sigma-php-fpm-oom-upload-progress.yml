@@ -1,0 +1,31 @@
+title: PHP-FPM Memory Exhaustion During Multipart Request Startup
+id: 5d1f7a2e-9c4b-4a61-b7f0-3e2a1c8d9b10
+status: experimental
+description: >
+  Detecta un fatal de PHP por agotamiento de memory_limit originado en el
+  request startup (parseo multipart / session.upload_progress), antes de que
+  se ejecute el script de la aplicacion. Patron del PoC PHP2Shell.
+references:
+  - https://www.php.net/manual/en/session.upload-progress.php
+author: php2shell-lab
+date: 2026/10/23
+logsource:
+  product: linux
+  service: php-fpm
+detection:
+  keywords_oom:
+    message|contains:
+      - 'Allowed memory size of'
+      - 'exhausted'
+  keywords_startup:
+    message|contains: 'in Unknown on line 0'
+  condition: keywords_oom and keywords_startup
+fields:
+  - message
+falsepositives:
+  - Aplicacion legitima que supera memory_limit en su propio codigo
+  - Pruebas de carga con cuerpos multipart muy grandes
+level: high
+tags:
+  - attack.t1190
+  - attack.t1499

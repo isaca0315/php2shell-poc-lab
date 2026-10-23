@@ -6,7 +6,7 @@ name: php2shell-lab-fixed
 
 services:
   php:
-    image: php:8.5.12-fpm
+    image: ${LAB_PHP_FIXED_IMAGE:-php:8.5.12-fpm}
     volumes:
       - ./php/php.ini:/usr/local/etc/php/conf.d/zz-php2shell-lab.ini:ro
       - ./php/www.conf:/usr/local/etc/php-fpm.d/zz-php2shell-lab.conf:ro
@@ -32,7 +32,7 @@ services:
   nginx:
     image: nginx:1.27-alpine
     ports:
-      - "127.0.0.1:8081:80"
+      - "127.0.0.1:${LAB_FIXED_PORT:-8081}:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./www:/var/www/html:ro

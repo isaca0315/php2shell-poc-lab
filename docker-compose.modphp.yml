@@ -1,0 +1,38 @@
+# Variante mod_php REAL (PHP 8.5.11 + Apache) para el PoC del CVE.
+#
+# El README del lab indica que el RCE de CVE-2026-109618 se demuestra en
+# mod_php, no en FPM. Este compose levanta el mismo trigger contra mod_php
+# para observar el comportamiento real del SAPI (fatal, workers, posible
+# SIGSEGV) sin incluir heap grooming ni exploit de RCE.
+#
+#   docker compose -f docker-compose.modphp.yml up -d
+#   python3 trigger.py --url http://127.0.0.1:8083/ --mode progress
+#   docker compose -f docker-compose.modphp.yml logs --since=5m
+name: php2shell-lab-modphp
+
+services:
+  php-modphp:
+    # 8.5.11 = vulnerable. Cambia a 8.5.12 para comparar.
+    image: ${LAB_MODPHP_IMAGE:-php:8.5.11-apache}
+    ports:
+      - "127.0.0.1:${LAB_MODPHP_PORT:-8083}:80"
+    volumes:
+      - ./php/php.ini:/usr/local/etc/php/conf.d/zz-php2shell-lab.ini:ro
+      - ./www:/var/www/html:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+      - /var/run/apache2:size=1m
+      - /var/lock/apache2:size=1m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+      - NET_BIND_SERVICE
+    mem_limit: 256m
+    pids_limit: 128

@@ -1,0 +1,34 @@
+title: Nginx 502 With Unexpected FastCGI Record From PHP-FPM
+id: c3b8d6f1-4e2a-4c97-8d15-2a9e7b6f5c32
+status: experimental
+description: >
+  Detecta el corte de PHP-FPM hacia nginx durante una peticion POST:
+  502 y/o "unexpected FastCGI record" / "upstream prematurely closed".
+  Correlacionar con fatals de PHP-FPM y POST multipart grandes.
+references:
+  - https://nginx.org/en/docs/http/ngx_http_fastcgi_module.html
+author: php2shell-lab
+date: 2026/10/23
+logsource:
+  product: nginx
+  service: nginx
+detection:
+  selection_status:
+    status: 502
+  selection_msg:
+    message|contains:
+      - 'unexpected FastCGI record'
+      - 'upstream prematurely closed connection'
+      - 'upstream sent invalid header'
+  condition: selection_status or selection_msg
+fields:
+  - remote_addr
+  - request
+  - status
+  - upstream_addr
+falsepositives:
+  - Reinicios planificados de PHP-FPM
+  - Timeouts de aplicaciones lentas
+level: medium
+tags:
+  - attack.t1499

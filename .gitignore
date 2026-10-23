@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Artefactos del lab / engagement
+lab/reports/
+target/www/uploads/*
+!target/www/uploads/.gitkeep
+os-trace/*.log
+os-trace/*.txt
+os-analysis/
+/tmp/
+
+# Editores / sistema
+.DS_Store
+*.swp

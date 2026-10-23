@@ -1,0 +1,1 @@
+FLAG{php2shell_rce_by_design}

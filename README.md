@@ -40,7 +40,7 @@ Aislamiento aplicado:
 ## 2. Levantarlo
 
 ```bash
-cd /home/ponciop/cwl/poc-php2shell
+cd /home/kali/php2shell-poc-lab
 
 # Vulnerable (PHP 8.5.11)
 docker compose up -d
@@ -266,11 +266,48 @@ binarios (el equipo de OX reporta 7 fallos en 8.2.34 y 0 en 8.2.35).
    line 0`, muertes de hijos FPM, `502` y, sobre todo, procesos shell hijos de
    `php-fpm`/`www-data` (indicador directo de RCE).
 
-## 8. Parar y limpiar
+## 8. Red team lab: de OOM a RCE
+
+La versión operativa tipo engagement está en [`lab/`](lab/README.md). Tiene dos
+actos y un objetivo final con flag:
+
+1. **CVE-2026-109618/619:** recon → validación → DoS → evidencia.
+2. **RCE:** subida de webshell `.phtml` en una app PHP **vulnerable por diseño**
+   (`target/`, puerto `8082`) y lectura de `/flag.txt`.
+
+```bash
+# Engagement completo (CVE + RCE + captura de flag)
+./lab/run-lab.sh
+
+# Fase por fase
+python3 lab/rt.py recon    --url http://127.0.0.1:8080/
+python3 lab/rt.py validate --url http://127.0.0.1:8080/ --docker-inspect
+python3 lab/rt.py impact   --url http://127.0.0.1:8080/ --repeat 3
+python3 lab/rce.py         --url http://127.0.0.1:8082/
+python3 lab/rt.py capture
+```
+
+Artefactos: `lab/reports/scoreboard.md`, `lab/reports/FLAG.txt`, informes
+`engagement-*.md` y `rce-*.md`, logs FPM/nginx y reglas Sigma/Suricata en
+`lab/detections/`.
+
+Variante mod_php real (el SAPI donde se documenta el RCE de 618):
+
+```bash
+./lab/run-modphp.sh      # PHP 8.5.11 + Apache en 127.0.0.1:8083
+```
+
+> El RCE se logra contra el target de entrenamiento, no explotando la
+> corrupción de memoria del CVE. El acto 1 mide **DoS + escritura de sesión**
+> y la variante mod_php reproduce el **fatal real** en `Unknown on line 0`;
+> no incluye heap grooming. Solo se aceptan objetivos loopback.
+
+## 9. Parar y limpiar
 
 ```bash
 docker compose down -v
 docker compose -f docker-compose.fixed.yml down -v
+docker compose -f docker-compose.modphp.yml down -v
 rm -f /tmp/sess_* 2>/dev/null || true
 ```
 
