@@ -1,5 +1,6 @@
 # Análisis de Sistemas Operativos: PHP2Shell (CVE-2026-109618 / CVE-2026-109619)
 
+> **[DISCLAIMER](DISCLAIMER.md)** — Uso **únicamente** educativo en entornos aislados.  
 > **Propósito:** análisis académico y ofensivo-defensivo **controlado** en
 > `127.0.0.1`. El objetivo es correlacionar el fallo de memoria en espacio de
 > usuario (Zend MM) con mecánicas del SO: llamadas al sistema, memoria virtual,

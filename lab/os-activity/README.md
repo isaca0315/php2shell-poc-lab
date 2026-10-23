@@ -1,5 +1,7 @@
 # Actividad OS — PHP2Shell desde dentro
 
+> **[DISCLAIMER](../../DISCLAIMER.md)** — Uso **únicamente** educativo en entornos aislados (`127.0.0.1`).
+
 Actividad corta para observar un **OOM de PHP** desde tres capas: memoria,
 procesos y sistemas de archivos. El disparador es benigno y no incluye RCE ni
 heap grooming.

@@ -1,5 +1,6 @@
 # PHP2Shell Red Team Lab — CVE-2026-109618 / CVE-2026-109619
 
+> **[DISCLAIMER](../DISCLAIMER.md)** — Uso **únicamente** educativo en entornos aislados.  
 > **Entorno aislado en `127.0.0.1`.** El lab tiene dos actos:
 >
 > 1. **CVE-2026-109618 / CVE-2026-109619:** demostrar el impacto del fallo de
