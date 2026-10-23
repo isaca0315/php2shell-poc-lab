@@ -1,5 +1,7 @@
 # Laboratorio PHP2Shell (CVE-2026-109618 / CVE-2026-109619)
 
+![PHP2Shell Lab Banner](lab-banner.png)
+
 Reproductor **local, aislado y no armado** del fallo que se alcanza al agotar
 `memory_limit` dentro del handler de `session.upload_progress`, durante el
 parseo multipart y **antes** de que se ejecute el script de la aplicación.
